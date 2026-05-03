@@ -3,664 +3,420 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>SmartVille — Каталог услуг посёлка</title>
-  <link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@400;500;600;700&family=Open+Sans:wght@400;600&display=swap" rel="stylesheet">
+  <title>SmartVille — Каталог услуг</title>
+  <link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@500;600;700&family=Open+Sans:wght@400;600&display=swap" rel="stylesheet">
   <style>
     :root {
-      --primary: #2d5a3d;
-      --primary-light: #4a7c59;
-      --secondary: #d4a574;
-      --accent: #e8b86d;
-      --bg: #f5f1e8;
-      --card: #ffffff;
-      --text: #2c3e2d;
-      --text-light: #6b7b6e;
-      --border: #e0d5c1;
-      --shadow: 0 4px 20px rgba(45, 90, 61, 0.08);
-      --shadow-hover: 0 8px 30px rgba(45, 90, 61, 0.15);
-      --radius: 16px;
+      --primary: #2d5a3d; --primary-light: #4a7c59; --secondary: #d4a574; --accent: #e8b86d;
+      --bg: #f7f5ee; --card: #ffffff; --text: #2c3e2d; --text-light: #6b7b6e;
+      --border: #e0d5c1; --shadow: 0 4px 16px rgba(45,90,61,0.06);
+      --shadow-hover: 0 8px 24px rgba(45,90,61,0.12); --radius: 16px; --star: #f59e0b;
     }
-
     * { box-sizing: border-box; margin: 0; padding: 0; }
+    body { font-family: 'Open Sans', sans-serif; background: var(--bg); color: var(--text); line-height: 1.6; min-height: 100vh; }
+    h1,h2,h3,h4 { font-family: 'Montserrat', sans-serif; }
     
-    body {
-      font-family: 'Open Sans', sans-serif;
-      background: var(--bg);
-      color: var(--text);
-      line-height: 1.6;
-      background-image: 
-        radial-gradient(#d4a574 0.5px, transparent 0.5px),
-        radial-gradient(#d4a574 0.5px, var(--bg) 0.5px);
-      background-size: 20px 20px;
-      background-position: 0 0, 10px 10px;
-    }
+    .hero { background: linear-gradient(135deg, var(--primary) 0%, var(--primary-light) 100%); color: white; padding: 3rem 1rem 3.5rem; text-align: center; position: relative; overflow: hidden; }
+    .hero::before { content: ''; position: absolute; inset: 0; background: url("image/svg+xml,%3Csvg width='60' height='60' viewBox='0 0 60 60' xmlns='http://www.w3.org/2000/svg'%3E%3Cg fill='%23ffffff' fill-opacity='0.04'%3E%3Cpath d='M36 34v-4h-2v4h-4v2h4v4h2v-4h4v-2h-4zm0-30V0h-2v4h-4v2h4v4h2V6h4V4h-4zM6 34v-4H4v4H0v2h4v4h2v-4h4v-2H6zM6 4V0H4v4H0v2h4v4h2V6h4V4H6z'/%3E%3C/g%3E%3C/svg%3E"); }
+    .hero h1 { font-size: 2.4rem; margin-bottom: 0.4rem; font-weight: 700; text-shadow: 1px 1px 3px rgba(0,0,0,0.15); }
+    .hero p { font-size: 1.1rem; opacity: 0.9; }
 
-    h1, h2, h3, h4 { font-family: 'Montserrat', sans-serif; }
+    .search-wrap { max-width: 700px; margin: -1.8rem auto 1.5rem; padding: 0 1rem; position: relative; z-index: 2; }
+    .search-box { background: white; border-radius: 50px; display: flex; align-items: center; box-shadow: var(--shadow-hover); border: 2px solid var(--border); padding: 0.4rem; transition: 0.3s; }
+    .search-box:focus-within { border-color: var(--secondary); transform: translateY(-2px); }
+    .search-box input { flex: 1; border: none; padding: 0.9rem 1.2rem; font-size: 1rem; outline: none; background: transparent; font-family: inherit; }
+    .search-box button { background: var(--secondary); color: white; border: none; padding: 0.8rem 1.8rem; border-radius: 50px; cursor: pointer; font-weight: 600; transition: 0.3s; font-family: 'Montserrat', sans-serif; }
+    .search-box button:hover { background: var(--accent); }
 
-    /* Header */
-    .hero {
-      background: linear-gradient(135deg, var(--primary) 0%, var(--primary-light) 100%);
-      color: white;
-      padding: 3rem 1rem 4rem;
-      position: relative;
-      overflow: hidden;
-    }
+    .nav-container { max-width: 1100px; margin: 0 auto; padding: 0 1rem 1rem; }
+    .rubric-tabs { display: flex; gap: 0.6rem; flex-wrap: wrap; justify-content: center; margin-bottom: 1rem; }
+    .tab-btn { padding: 0.6rem 1.2rem; background: white; border: 2px solid var(--border); border-radius: 30px; cursor: pointer; font-weight: 600; transition: 0.3s; font-family: 'Montserrat', sans-serif; font-size: 0.85rem; white-space: nowrap; box-shadow: var(--shadow); }
+    .tab-btn:hover, .tab-btn.active { background: var(--primary); color: white; border-color: var(--primary); transform: translateY(-2px); }
     
-    .hero::before {
-      content: '';
-      position: absolute;
-      top: 0; left: 0; right: 0; bottom: 0;
-      background: url("data:image/svg+xml,%3Csvg width='60' height='60' viewBox='0 0 60 60' xmlns='http://www.w3.org/2000/svg'%3E%3Cg fill='none' fill-rule='evenodd'%3E%3Cg fill='%23ffffff' fill-opacity='0.05'%3E%3Cpath d='M36 34v-4h-2v4h-4v2h4v4h2v-4h4v-2h-4zm0-30V0h-2v4h-4v2h4v4h2V6h4V4h-4zM6 34v-4H4v4H0v2h4v4h2v-4h4v-2H6zM6 4V0H4v4H0v2h4v4h2V6h4V4H6z'/%3E%3C/g%3E%3C/g%3E%3C/svg%3E");
-      opacity: 0.3;
-    }
+    .subcat-pills { display: flex; gap: 0.5rem; flex-wrap: wrap; justify-content: center; margin-bottom: 1.5rem; }
+    .pill { padding: 0.4rem 0.9rem; background: rgba(255,255,255,0.7); border: 1px solid var(--border); border-radius: 20px; cursor: pointer; font-size: 0.8rem; transition: 0.2s; }
+    .pill:hover, .pill.active { background: var(--secondary); color: white; border-color: var(--secondary); }
 
-    .hero-content {
-      max-width: 900px;
-      margin: 0 auto;
-      text-align: center;
-      position: relative;
-      z-index: 1;
-    }
+    .stats { display: flex; gap: 1rem; justify-content: center; flex-wrap: wrap; margin-bottom: 1.5rem; }
+    .stat { background: white; padding: 0.8rem 1.5rem; border-radius: var(--radius); box-shadow: var(--shadow); text-align: center; }
+    .stat-num { font-size: 1.5rem; font-weight: 700; color: var(--primary); font-family: 'Montserrat', sans-serif; }
+    .stat-label { font-size: 0.8rem; color: var(--text-light); }
 
-    .hero h1 {
-      font-size: 2.8rem;
-      margin-bottom: 0.5rem;
-      font-weight: 700;
-      text-shadow: 2px 2px 4px rgba(0,0,0,0.1);
-    }
+    .container { max-width: 1100px; margin: 0 auto; padding: 0 1rem 3rem; }
+    .grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(300px, 1fr)); gap: 1.2rem; }
+    .card { background: var(--card); border-radius: var(--radius); padding: 1.4rem; box-shadow: var(--shadow); transition: 0.3s; border: 2px solid transparent; position: relative; overflow: hidden; }
+    .card::before { content: ''; position: absolute; top: 0; left: 0; right: 0; height: 4px; background: linear-gradient(90deg, var(--primary), var(--secondary)); }
+    .card:hover { transform: translateY(-4px); box-shadow: var(--shadow-hover); border-color: var(--border); }
+    .card-header { display: flex; justify-content: space-between; align-items: start; margin-bottom: 0.8rem; gap: 0.8rem; }
+    .card-title { font-size: 1.1rem; font-weight: 700; color: var(--primary); margin-bottom: 0.2rem; font-family: 'Montserrat', sans-serif; }
+    .card-company { font-size: 0.9rem; color: var(--text-light); font-weight: 600; }
+    .badge { background: linear-gradient(135deg, var(--secondary), var(--accent)); color: white; padding: 0.25rem 0.7rem; border-radius: 20px; font-size: 0.75rem; font-weight: 600; white-space: nowrap; }
+    .tag { background: #f0e6d2; color: var(--primary); padding: 0.2rem 0.6rem; border-radius: 6px; font-size: 0.75rem; font-weight: 600; display: inline-block; margin-bottom: 0.6rem; }
+    .phone-btn { display: inline-flex; align-items: center; gap: 0.5rem; background: var(--bg); padding: 0.5rem 0.9rem; border-radius: 8px; color: var(--primary); text-decoration: none; font-weight: 600; margin: 0.5rem 0; transition: 0.3s; border: 2px solid var(--border); }
+    .phone-btn:hover { background: var(--primary); color: white; }
+    .card-desc { color: var(--text-light); font-size: 0.9rem; line-height: 1.5; margin: 0.5rem 0; }
+    .card-price { background: #e8f5e9; color: var(--primary); padding: 0.4rem 0.7rem; border-radius: 6px; font-size: 0.85rem; font-weight: 600; display: inline-block; margin-top: 0.5rem; }
+    .card-footer { display: flex; justify-content: space-between; align-items: center; margin-top: 1rem; padding-top: 0.8rem; border-top: 1px dashed var(--border); font-size: 0.8rem; color: var(--text-light); }
+    .site-link { color: var(--primary); text-decoration: none; font-weight: 600; }
+    .review-btn { background: none; border: none; color: var(--secondary); cursor: pointer; font-size: 0.8rem; padding: 0; font-weight: 600; transition: 0.2s; }
+    .review-btn:hover { text-decoration: underline; }
+    
+    .rating-row { display: flex; align-items: center; gap: 0.5rem; margin-bottom: 0.5rem; }
+    .stars { color: var(--star); letter-spacing: 2px; }
+    .rating-count { color: var(--text-light); font-size: 0.8rem; }
 
-    .hero p {
-      font-size: 1.2rem;
-      opacity: 0.95;
-      margin-bottom: 2rem;
-    }
+    .empty { text-align: center; padding: 4rem 1rem; grid-column: 1/-1; }
+    .empty span { font-size: 3.5rem; display: block; margin-bottom: 0.5rem; opacity: 0.6; }
+    
+    .modal-overlay { position: fixed; inset: 0; background: rgba(0,0,0,0.45); display: none; align-items: center; justify-content: center; padding: 1rem; z-index: 100; backdrop-filter: blur(3px); }
+    .modal-overlay.open { display: flex; }
+    .modal { background: var(--card); padding: 1.8rem; border-radius: var(--radius); width: 100%; max-width: 460px; box-shadow: 0 12px 40px rgba(0,0,0,0.2); max-height: 90vh; overflow-y: auto; position: relative; }
+    .close-btn { position: absolute; top: 1rem; right: 1rem; background: none; border: none; font-size: 1.8rem; cursor: pointer; color: var(--text-light); transition: 0.2s; }
+    .close-btn:hover { color: var(--text); }
+    .modal h2 { margin-bottom: 1.2rem; font-size: 1.4rem; color: var(--primary); }
+    .form-group { margin-bottom: 1rem; }
+    .form-group label { display: block; margin-bottom: 0.3rem; font-weight: 600; font-size: 0.9rem; color: var(--text); }
+    .form-group input, .form-group select, .form-group textarea { width: 100%; padding: 0.75rem; border: 2px solid var(--border); border-radius: 10px; font-size: 0.95rem; outline: none; transition: 0.2s; font-family: inherit; }
+    .form-group input:focus, .form-group select:focus, .form-group textarea:focus { border-color: var(--secondary); }
+    .form-group textarea { min-height: 80px; resize: vertical; }
+    .btn-row { display: flex; gap: 0.8rem; justify-content: flex-end; margin-top: 1rem; }
+    .btn { padding: 0.8rem 1.5rem; border: none; border-radius: 10px; font-weight: 600; cursor: pointer; transition: 0.3s; font-family: 'Montserrat', sans-serif; }
+    .btn-primary { background: var(--primary); color: white; }
+    .btn-primary:hover { background: var(--primary-light); }
+    .btn-sec { background: #f0e6d2; color: var(--text); }
+    .btn-sec:hover { background: #e0d5c1; }
+    .btn-add { position: fixed; bottom: 2rem; right: 2rem; background: var(--secondary); color: white; padding: 1rem 2rem; border-radius: 50px; box-shadow: var(--shadow-hover); font-weight: 700; cursor: pointer; z-index: 90; transition: 0.3s; border: none; display: flex; align-items: center; gap: 0.5rem; font-family: 'Montserrat', sans-serif; }
+    .btn-add:hover { transform: scale(1.05); background: var(--accent); }
+    .sync-status { position: fixed; bottom: 2rem; left: 2rem; background: white; padding: 0.6rem 1rem; border-radius: 8px; box-shadow: var(--shadow-hover); font-size: 0.85rem; font-weight: 600; z-index: 90; transition: 0.3s; opacity: 0; pointer-events: none; }
+    .sync-status.show { opacity: 1; pointer-events: auto; }
+    .sync-status.loading { color: var(--secondary); }
+    .sync-status.success { color: var(--primary); }
+    .sync-status.error { color: #ef4444; }
 
-    /* Search */
-    .search-container {
-      max-width: 700px;
-      margin: -2rem auto 2rem;
-      padding: 0 1rem;
-      position: relative;
-      z-index: 10;
-    }
-
-    .search-box {
-      background: white;
-      border-radius: 50px;
-      padding: 0.5rem;
-      box-shadow: var(--shadow-hover);
-      display: flex;
-      align-items: center;
-      border: 2px solid var(--border);
-      transition: all 0.3s;
-    }
-
-    .search-box:focus-within {
-      border-color: var(--secondary);
-      transform: translateY(-2px);
-    }
-
-    .search-box input {
-      flex: 1;
-      border: none;
-      padding: 1rem 1.5rem;
-      font-size: 1rem;
-      outline: none;
-      background: transparent;
-      font-family: inherit;
-    }
-
-    .search-box button {
-      background: var(--secondary);
-      color: white;
-      border: none;
-      padding: 1rem 2rem;
-      border-radius: 50px;
-      cursor: pointer;
-      font-weight: 600;
-      transition: all 0.3s;
-      font-family: 'Montserrat', sans-serif;
-    }
-
-    .search-box button:hover {
-      background: var(--accent);
-      transform: scale(1.05);
-    }
-
-    /* Navigation */
-    .nav-container {
-      max-width: 1200px;
-      margin: 0 auto;
-      padding: 0 1rem 2rem;
-    }
-
-    .category-nav {
-      display: flex;
-      gap: 0.8rem;
-      flex-wrap: wrap;
-      justify-content: center;
-      margin-bottom: 2rem;
-    }
-
-    .nav-btn {
-      padding: 0.7rem 1.5rem;
-      border: 2px solid var(--border);
-      background: white;
-      border-radius: 50px;
-      cursor: pointer;
-      font-weight: 600;
-      transition: all 0.3s;
-      font-family: 'Montserrat', sans-serif;
-      font-size: 0.9rem;
-      display: flex;
-      align-items: center;
-      gap: 0.5rem;
-      box-shadow: var(--shadow);
-    }
-
-    .nav-btn:hover, .nav-btn.active {
-      background: var(--primary);
-      color: white;
-      border-color: var(--primary);
-      transform: translateY(-2px);
-      box-shadow: var(--shadow-hover);
-    }
-
-    /* Stats */
-    .stats {
-      display: flex;
-      gap: 1rem;
-      justify-content: center;
-      flex-wrap: wrap;
-      margin-bottom: 2rem;
-    }
-
-    .stat-card {
-      background: white;
-      padding: 1rem 2rem;
-      border-radius: var(--radius);
-      box-shadow: var(--shadow);
-      text-align: center;
-      min-width: 150px;
-    }
-
-    .stat-number {
-      font-size: 2rem;
-      font-weight: 700;
-      color: var(--primary);
-      font-family: 'Montserrat', sans-serif;
-    }
-
-    .stat-label {
-      font-size: 0.85rem;
-      color: var(--text-light);
-    }
-
-    /* Main Content */
-    .container {
-      max-width: 1200px;
-      margin: 0 auto;
-      padding: 0 1rem 3rem;
-    }
-
-    .section-title {
-      font-size: 1.8rem;
-      margin: 2rem 0 1.5rem;
-      color: var(--primary);
-      display: flex;
-      align-items: center;
-      gap: 0.8rem;
-      padding-bottom: 0.5rem;
-      border-bottom: 3px solid var(--secondary);
-    }
-
-    .grid {
-      display: grid;
-      grid-template-columns: repeat(auto-fill, minmax(320px, 1fr));
-      gap: 1.5rem;
-    }
-
-    /* Cards */
-    .card {
-      background: var(--card);
-      border-radius: var(--radius);
-      padding: 1.5rem;
-      box-shadow: var(--shadow);
-      transition: all 0.3s;
-      border: 2px solid transparent;
-      position: relative;
-      overflow: hidden;
-    }
-
-    .card::before {
-      content: '';
-      position: absolute;
-      top: 0;
-      left: 0;
-      right: 0;
-      height: 4px;
-      background: linear-gradient(90deg, var(--primary), var(--secondary));
-    }
-
-    .card:hover {
-      transform: translateY(-5px);
-      box-shadow: var(--shadow-hover);
-      border-color: var(--border);
-    }
-
-    .card-header {
-      display: flex;
-      justify-content: space-between;
-      align-items: start;
-      margin-bottom: 1rem;
-      gap: 1rem;
-    }
-
-    .card-title {
-      font-size: 1.2rem;
-      font-weight: 700;
-      color: var(--primary);
-      margin-bottom: 0.3rem;
-      font-family: 'Montserrat', sans-serif;
-    }
-
-    .card-company {
-      font-size: 0.9rem;
-      color: var(--text-light);
-      font-weight: 600;
-    }
-
-    .category-badge {
-      background: linear-gradient(135deg, var(--secondary), var(--accent));
-      color: white;
-      padding: 0.3rem 0.8rem;
-      border-radius: 20px;
-      font-size: 0.75rem;
-      font-weight: 600;
-      white-space: nowrap;
-      font-family: 'Montserrat', sans-serif;
-    }
-
-    .card-phone {
-      display: inline-flex;
-      align-items: center;
-      gap: 0.5rem;
-      background: var(--bg);
-      padding: 0.6rem 1rem;
-      border-radius: 8px;
-      color: var(--primary);
-      text-decoration: none;
-      font-weight: 600;
-      margin: 0.8rem 0;
-      transition: all 0.3s;
-      border: 2px solid var(--border);
-    }
-
-    .card-phone:hover {
-      background: var(--primary);
-      color: white;
-      transform: scale(1.02);
-    }
-
-    .card-desc {
-      color: var(--text-light);
-      font-size: 0.9rem;
-      line-height: 1.5;
-      margin: 0.8rem 0;
-    }
-
-    .card-price {
-      background: #f0e6d2;
-      padding: 0.5rem 0.8rem;
-      border-radius: 8px;
-      font-size: 0.85rem;
-      color: var(--primary);
-      font-weight: 600;
-      margin-top: 0.8rem;
-      display: inline-block;
-    }
-
-    .card-meta {
-      display: flex;
-      justify-content: space-between;
-      align-items: center;
-      margin-top: 1rem;
-      padding-top: 1rem;
-      border-top: 1px dashed var(--border);
-      font-size: 0.8rem;
-      color: var(--text-light);
-    }
-
-    .card-author {
-      font-style: italic;
-    }
-
-    .empty-state {
-      text-align: center;
-      padding: 4rem 2rem;
-      grid-column: 1 / -1;
-    }
-
-    .empty-state span {
-      font-size: 4rem;
-      display: block;
-      margin-bottom: 1rem;
-      opacity: 0.5;
-    }
-
-    .empty-state h3 {
-      color: var(--primary);
-      margin-bottom: 0.5rem;
-    }
-
-    /* Footer */
-    footer {
-      background: var(--primary);
-      color: white;
-      text-align: center;
-      padding: 2rem;
-      margin-top: 3rem;
-    }
-
-    footer a {
-      color: var(--accent);
-      text-decoration: none;
-    }
-
-    /* Responsive */
+    footer { background: var(--primary); color: white; text-align: center; padding: 2rem 1rem; margin-top: 2rem; font-size: 0.9rem; }
+    footer a { color: var(--accent); text-decoration: none; cursor: pointer; }
+    
     @media (max-width: 768px) {
-      .hero h1 { font-size: 2rem; }
+      .hero h1 { font-size: 1.9rem; }
       .grid { grid-template-columns: 1fr; }
       .search-box { flex-direction: column; padding: 1rem; }
-      .search-box input { width: 100%; }
-      .search-box button { width: 100%; margin-top: 0.5rem; }
-      .category-nav { gap: 0.5rem; }
-      .nav-btn { padding: 0.6rem 1rem; font-size: 0.85rem; }
+      .search-box input, .search-box button { width: 100%; }
+      .rubric-tabs, .subcat-pills { justify-content: flex-start; overflow-x: auto; padding-bottom: 0.5rem; flex-wrap: nowrap; -webkit-overflow-scrolling: touch; }
+      .tab-btn, .pill { flex-shrink: 0; }
+      .btn-add { bottom: 1.5rem; right: 1.5rem; padding: 0.8rem 1.5rem; }
+      .sync-status { left: 1rem; bottom: 1rem; }
     }
-
-    /* Animations */
-    @keyframes fadeIn {
-      from { opacity: 0; transform: translateY(20px); }
-      to { opacity: 1; transform: translateY(0); }
-    }
-
-    .card { animation: fadeIn 0.5s ease-out; }
   </style>
 </head>
 <body>
 
   <header class="hero">
-    <div class="hero-content">
-      <h1> SmartVille</h1>
-      <p>Каталог услуг и контактов нашего посёлка</p>
-    </div>
+    <h1>🌿 SmartVille</h1>
+    <p>Каталог контактов, услуг и развлечений нашего посёлка</p>
   </header>
 
-  <div class="search-container">
+  <div class="search-wrap">
     <div class="search-box">
-      <input type="text" id="searchInput" placeholder="🔍 Поиск по названию, услуге, телефону или имени...">
-      <button onclick="filterData()">Найти</button>
+      <input type="text" id="searchInput" placeholder="🔍 Поиск по названию, телефону, услуге или имени...">
+      <button onclick="applyFilters()">Найти</button>
     </div>
   </div>
 
   <div class="nav-container">
     <div class="stats" id="stats"></div>
-    
-    <div class="category-nav" id="categoryNav"></div>
+    <div class="rubric-tabs" id="rubricTabs"></div>
+    <div class="subcat-pills" id="subcatPills"></div>
   </div>
 
-  <main class="container" id="content"></main>
+  <main class="container">
+    <div class="grid" id="grid"></div>
+  </main>
+
+  <button class="btn-add" id="openAddModal">+ Добавить контакт</button>
+  <div id="syncStatus" class="sync-status">⏳ Синхронизация...</div>
 
   <footer>
-    <p>🌿 SmartVille — сообщество загородной жизни</p>
-    <p style="margin-top: 0.5rem; font-size: 0.9rem; opacity: 0.8;">
-      Данные обновляются жителями посёлка • 
-      <a href="#" onclick="exportData(); return false;">💾 Экспорт данных</a>
+    <p>🏡 SmartVille — сообщество загородной жизни</p>
+    <p style="opacity:0.8; margin-top:0.5rem;">
+      <a id="openGithubConfig">⚙️ Настройка GitHub</a> • Данные публикуются автоматически
     </p>
   </footer>
 
+  <!-- Modal: Добавить контакт -->
+  <div class="modal-overlay" id="addModal">
+    <div class="modal">
+      <button class="close-btn" id="closeAddModal">&times;</button>
+      <h2>Добавить новый контакт</h2>
+      <form id="addForm">
+        <div class="form-group"><label for="f_rubric">Рубрика</label><select id="f_rubric" required></select></div>
+        <div class="form-group"><label for="f_cat">Категория</label><input type="text" id="f_cat" list="catList" placeholder="Напр: Сантехника, Ветклиника..." required><datalist id="catList"></datalist></div>
+        <div class="form-group"><label for="f_name">Наименование услуги</label><input type="text" id="f_name" required placeholder="Напр: Обслуживание котлов"></div>
+        <div class="form-group"><label for="f_company">Имя / Компания</label><input type="text" id="f_company" placeholder="Напр: Александр / МосОблГаз"></div>
+        <div class="form-group"><label for="f_phone">Телефон</label><input type="tel" id="f_phone" required placeholder="+7 (999) 000-00-00"></div>
+        <div class="form-group"><label for="f_desc">Комментарии / Описание</label><textarea id="f_desc" placeholder="Что делает, особенности, рекомендации..."></textarea></div>
+        <div class="form-group"><label for="f_price">Примерные цены</label><input type="text" id="f_price" placeholder="Напр: 4500 ₽, от 1000 ₽/час"></div>
+        <div class="form-group"><label for="f_web">Сайт / Instagram</label><input type="url" id="f_web" placeholder="https://..."></div>
+        <div class="form-group"><label for="f_author">Кто добавил</label><input type="text" id="f_author" required placeholder="Ваше имя"></div>
+        <div class="btn-row"><button type="button" class="btn btn-sec" id="cancelForm">Отмена</button><button type="submit" class="btn btn-primary">🚀 Добавить и опубликовать</button></div>
+      </form>
+    </div>
+  </div>
+
+  <!-- Modal: Отзыв -->
+  <div class="modal-overlay" id="reviewModal">
+    <div class="modal">
+      <button class="close-btn" id="closeReviewModal">&times;</button>
+      <h2>Оставить отзыв</h2>
+      <form id="reviewForm">
+        <input type="hidden" id="r_masterId">
+        <div class="form-group"><label for="r_author">Ваше имя</label><input type="text" id="r_author" required placeholder="Иван П."></div>
+        <div class="form-group"><label>Оценка</label><div class="star-picker" id="starPicker"><span data-v="1">★</span><span data-v="2">★</span><span data-v="3">★</span><span data-v="4">★</span><span data-v="5">★</span></div></div>
+        <input type="hidden" id="r_rating" value="5">
+        <div class="form-group"><label for="r_text">Текст отзыва</label><textarea id="r_text" required placeholder="Что понравилось?"></textarea></div>
+        <div class="btn-row"><button type="button" class="btn btn-sec" id="cancelReviewModal">Отмена</button><button type="submit" class="btn btn-primary">📤 Опубликовать</button></div>
+      </form>
+    </div>
+  </div>
+
+  <!-- Modal: GitHub Config -->
+  <div class="modal-overlay" id="githubConfigModal">
+    <div class="modal">
+      <button class="close-btn" id="closeGithubConfig">&times;</button>
+      <h2>⚙️ Настройка GitHub API</h2>
+      <p style="margin-bottom:1rem; color:var(--text-light); font-size:0.9rem;">
+        Для автоматической публикации введите данные репозитория и токен. Токен сохраняется только в вашем браузере.
+      </p>
+      <form id="githubConfigForm">
+        <div class="form-group"><label for="gh_owner">GitHub Username</label><input type="text" id="gh_owner" required placeholder="ivanov"></div>
+        <div class="form-group"><label for="gh_repo">Repository</label><input type="text" id="gh_repo" required placeholder="smartville-catalog"></div>
+        <div class="form-group"><label for="gh_branch">Branch</label><input type="text" id="gh_branch" value="main" required></div>
+        <div class="form-group"><label for="gh_token">Personal Access Token</label><input type="password" id="gh_token" required placeholder="ghp_xxxxxxxxxxxx"></div>
+        <div class="btn-row"><button type="button" class="btn btn-sec" id="cancelGithubConfig">Закрыть</button><button type="submit" class="btn btn-primary">💾 Сохранить</button></div>
+      </form>
+    </div>
+  </div>
+
   <script>
-    // Data from CSV files
-    const catalogData = [
-  {"category":"Бытовые услуги","name":"Водоочистка (фильтра, настройка)","company":"Алексей","phone":"89262805485","desc":"Замена фильтров, диагностика","price":"2500 - 3000 ₽","author":"4/13 Алексей"},
-  {"category":"Бытовые услуги","name":"Сантехник","company":"Илья","phone":"89031538521","desc":"Показался компетентным","price":"","author":"4/13 Алексей"},
-  {"category":"Бытовые услуги","name":"Обслуживание септиков","company":"Александр","phone":"8-925-927-00-79","desc":"Хороший специалист, приезжает в назначенное время","price":"4500 ₽","author":"4/13 Алексей"},
-  {"category":"Бытовые услуги","name":"Обслуживание септиков","company":"","phone":"79771130924","desc":"","price":"5000 ₽","author":""},
-  {"category":"Бытовые услуги","name":"Обслуживание септиков","company":"Владимир","phone":"79268101131","desc":"","price":"4500-5000 ₽","author":""},
-  {"category":"Бытовые услуги","name":"Обслуживание септиков","company":"Александр","phone":"7 925 347-80-10","desc":"","price":"","author":""},
-  {"category":"Бытовые услуги","name":"Частный водитель","company":"","phone":"8 (916) 999-39-19","desc":"","price":"","author":"4/13 Алексей"},
-  {"category":"Бытовые услуги","name":"Уборщица","company":"Светлана","phone":"7 (962) 982-89-54","desc":"","price":"","author":""},
-  {"category":"Бытовые услуги","name":"Электрик","company":"Николай","phone":"79037993176","desc":"","price":"","author":""},
-  {"category":"Бытовые услуги","name":"Оконщик","company":"Андрей","phone":"+7 926 393-07-55","desc":"Сложные случаи, работает как частник, исполнительный","price":"","author":""},
-  {"category":"Бытовые услуги","name":"Установка дверей","company":"Виталий","phone":"79296251691","desc":"","price":"1500 ₽ — выезд","author":"Мария"},
-  {"category":"Бытовые услуги","name":"Установка дверей","company":"Юрий","phone":"89646461842, 89603068844","desc":"","price":"","author":""},
-  {"category":"Бытовые услуги","name":"Окна","company":"Николай","phone":"79035804104","desc":"","price":"","author":"от Дениса"},
-  {"category":"Бытовые услуги","name":"Мусор Вывоз","company":"Ирина","phone":"89096981909","desc":"","price":"","author":""},
-  {"category":"Бытовые услуги","name":"Обслуживание котлов","company":"Александр","phone":"9959193598","desc":"Сертифицированный специалист по газовому оборудованию, официальный договор с Мособлгаз. Оперативно выручает.","price":"","author":"Наталья"},
-  {"category":"Бытовые услуги","name":"Обслуживание котлов","company":"Андрей","phone":"89261290121","desc":"Рекомендуют","price":"","author":"Марина"},
-  {"category":"Бытовые услуги","name":"Обслуживание котлов","company":"Сергей (МосОблГаз)","phone":"7 905 128-17-59, 7 919 999-03-09","desc":"","price":"","author":"Алексей С."},
-  {"category":"Бытовые услуги","name":"Ремонт стиральных машин","company":"Александр Bosh","phone":"89166433047","desc":"","price":"","author":""},
-  {"category":"Бытовые услуги","name":"Вентиляция Дымоходы","company":"Евгений","phone":"7 903 012-97-93","desc":"","price":"","author":""},
-  {"category":"Бытовые услуги","name":"Строительные работы, сантехника","company":"Сергей","phone":"89031709338","desc":"Грамотные ребята, адекватные цены","price":"","author":""},
-  
-  {"category":"Строительство","name":"Строительство домов","company":"Владимир","phone":"89035685784","desc":"Опытный, без креатива","price":"Дешевле рынка частников","author":"4/13 Алексей"},
-  {"category":"Строительство","name":"Вывоз строительного мусора","company":"Ирина","phone":"89096981909","desc":"Не подводили со сроками","price":"8000 ₽ / 8 м³","author":"4/13 Алексей"},
-  {"category":"Строительство","name":"Вывоз мусора — Дмитров","company":"","phone":"8496224109","desc":"","price":"","author":"Вера"},
-  {"category":"Строительство","name":"Тротуарная плитка, земляные работы","company":"Батюшково","phone":"89263445712","desc":"","price":"","author":"4/13 Алексей"},
-  {"category":"Строительство","name":"Песок, земля, щебень","company":"Батюшково","phone":"89858206588","desc":"","price":"Песок: 5 м³ — 4000 ₽, 8 м³ — 5000 ₽","author":"4/13 Алексей"},
-  {"category":"Строительство","name":"Колодцы — копка, ремонт","company":"Рафаэль","phone":"89670854222","desc":"Контакт старый","price":"","author":""},
-  {"category":"Строительство","name":"Колодцы, вода","company":"Сергей","phone":"89067396945","desc":"Контакт старый","price":"","author":""},
-  {"category":"Строительство","name":"Лестницы","company":"Василий","phone":"79999948998","desc":"","price":"","author":""},
-  {"category":"Строительство","name":"Лестницы","company":"Дмитрий","phone":"79168011607","desc":"","price":"","author":""},
-  {"category":"Строительство","name":"Лестницы","company":"Алексей","phone":"79252627220","desc":"","price":"","author":""},
-  {"category":"Строительство","name":"Плотник","company":"Сергей","phone":"79851811931","desc":"","price":"","author":""},
-  
-  {"category":"Еда и рестораны","name":"Ресторан в X-LAND","company":"XLand","phone":"89031420916","desc":"Меню кафе в Инстаграм: @La__Moroz","price":"200-300 ₽","author":"4/13 Александра"},
-  {"category":"Еда и рестораны","name":"Ресторан Бисквит (Дмитров)","company":"","phone":"7(925)146-06-83","desc":"Вкусная еда. Доставка ~1.5-2 часа","price":"Ср. чек 1500 ₽","author":"4/13 Алексей","website":"https://restoran-dmitrov.ru/"},
-  {"category":"Еда и рестораны","name":"Доставка пиццы","company":"","phone":"84951503859","desc":"Хорошее меню, вкусные блюда","price":"","author":"Алексей","website":"https://oscocafe.ru/"},
-  {"category":"Еда и рестораны","name":"Суши Барракуда (Дмитров)","company":"","phone":"7916-501-11-77","desc":"Суши, роллы, пицца, супы","price":"","author":"","website":"https://sushi-dmitrov.ru/"},
-  {"category":"Еда и рестораны","name":"Доставка пиццы","company":"Yandex Go","phone":"","desc":"Пицца Д'миро — недорогая, бесплатная доставка в посёлок","price":"","author":""},
-  {"category":"Еда и рестораны","name":"Доставка еды","company":"","phone":"89258988898, 84951888898","desc":"","price":"","author":"Ксения","website":"http://мясонауглях.рус/"},
-  {"category":"Еда и рестораны","name":"Пицца","company":"","phone":"","desc":"Конструктор пиццы онлайн","price":"","author":"","website":"http://dmiro.azurewebsites.net"},
-  {"category":"Еда и рестораны","name":"Мясные фермерские продукты","company":"Колистратов Дмитрий","phone":"79032387062","desc":"@kolistratovdmitrii. Оксана рекомендует","price":"","author":""},
-  
-  {"category":"Магазины и доставки","name":"Доставка рыбы","company":"Fishorder.ru","phone":"","desc":"","price":"","author":""},
-  {"category":"Магазины и доставки","name":"Шарики для оформления","company":"Ирина","phone":"8 (909) 955-33-28","desc":"Instagram: @vozdushnaya_radost_dm","price":"","author":"Татьяна"},
-  
-  {"category":"Отдых и развлечения","name":"Свежий ветер (Дом отдыха)","company":"","phone":"8(800)-707-11-90","desc":"","price":"8000 ₽ / сутки","author":"","website":"https://sv-spa-hotel.ru/"},
-  {"category":"Отдых и развлечения","name":"Страусиная ферма","company":"","phone":"","desc":"Яйца можно купить, но не всегда бывают","price":"","author":"","website":"https://strauslend.ru/"},
-  {"category":"Отдых и развлечения","name":"Боярская усадьба (Дом отдыха)","company":"","phone":"7 495 661-88-53","desc":"","price":"","author":"","website":"https://www.boyarskoe.com/"},
-  {"category":"Отдых и развлечения","name":"Усадьба Батюшково","company":"","phone":"7 (925) 518-6282","desc":"Большой дом с бассейном, подходит для мероприятий","price":"от 10000 ₽ / сутки","author":"","website":"https://www.ecoclub-resort.ru/"},
-  {"category":"Отдых и развлечения","name":"Алирико (отель, ресторан)","company":"","phone":"7 (926) 534-43-79","desc":"","price":"от 2000 ₽ / сутки","author":"","website":"https://aliriko.ru/"},
-  {"category":"Отдых и развлечения","name":"Боулинг в X-Land","company":"","phone":"7(495) 649-50-02","desc":"Лучше заказывать заранее","price":"950 ₽ / час","author":"","website":"http://xlandpark.ru/"},
-  {"category":"Отдых и развлечения","name":"Детские праздники и корпоративы","company":"Алексей — клуб Патриот","phone":"89646404343","desc":"Лазертаг, пейнтбол, квесты, форт Баярд","price":"","author":"","website":"https://patriotdmitrov.ru/"},
-  
-  {"category":"Мероприятия в посёлке","name":"Занятия для детей","company":"Анна","phone":"7 916 127-81-99","desc":"Предоставление террасы на участке 11/24","price":"","author":"4/13 Алексей"},
-  {"category":"Мероприятия в посёлке","name":"Выпечка десертов, торты","company":"Ксения","phone":"7 926 701-47-62","desc":"Капкейки, кенди-бар. Instagram: @tapasmarbella","price":"","author":"4/13 Алексей","website":"http://tapasmarbella.ru/"},
-  {"category":"Мероприятия в посёлке","name":"Флористика, композиции из цветов","company":"Мария","phone":"7 925 706-26-49","desc":"","price":"","author":"Ксения"},
-  
-  {"category":"Медицина и аптеки","name":"Аптека с доставкой","company":"Superapteka.ru","phone":"","desc":"Онлайн-заказ лекарств с доставкой","price":"","author":"","website":"https://superapteka.ru"},
-  {"category":"Медицина и аптеки","name":"Врач-педиатр","company":"Мария Геннадьевна","phone":"89031370001","desc":"Выезжает на дом","price":"","author":""},
-  {"category":"Медицина и аптеки","name":"Подмосковная служба по ковиду","company":"","phone":"88005505030","desc":"Присылают врача, нужен только полис","price":"","author":""},
-  
-  {"category":"Животные и защита от насекомых","name":"Стрижка собак (груминг)","company":"Ирина","phone":"89163860065","desc":"Приезжает в посёлок, стрижёт быстро и качественно. Очень приятный мастер.","price":"1500-2000 ₽","author":"4/13 Александра"},
-  {"category":"Животные и защита от насекомых","name":"Ветклиника Дмитров","company":"","phone":"74997077680","desc":"","price":"","author":""},
-  {"category":"Животные и защита от насекомых","name":"Частный ветеринар","company":"","phone":"79104084706","desc":"","price":"","author":""},
-  {"category":"Животные и защита от насекомых","name":"Ветклиника в Икше","company":"ВетБиоПро","phone":"74955186291","desc":"","price":"","author":""},
-  {"category":"Животные и защита от насекомых","name":"Ветврач Икша (выезд)","company":"Наталья","phone":"79035296814","desc":"Выезд на дом","price":"","author":""},
-  {"category":"Животные и защита от насекомых","name":"Обработка участка от клещей","company":"GardenReview","phone":"79167844122","desc":"Профессиональная дезинсекция","price":"500 ₽ / сотка","author":"","website":"http://gardenreview.ru/"}
-    ];
+    // Конфигурация рубрик
+    const RUBRICS_CONFIG = {
+      "Бытовые услуги": ["Водоочистка", "Сантехника", "Септики", "Электрика", "Окна и двери", "Котлы и газ", "Бытовая техника", "Вентиляция и дымоходы", "Вывоз мусора", "Уборка и водители"],
+      "Строительство": ["Строительство домов", "Вывоз мусора", "Благоустройство и плитка", "Сыпучие материалы", "Колодцы и скважины", "Лестницы", "Плотницкие работы"],
+      "Еда и рестораны": ["Рестораны и кафе", "Доставка пиццы", "Суши и роллы", "Фермерские продукты", "Онлайн-конструкторы"],
+      "Магазины и доставки": ["Рыба и морепродукты", "Праздничное оформление"],
+      "Отдых и развлечения": ["Базы отдыха и отели", "Активный отдых", "Детские праздники и квесты"],
+      "Мероприятия в посёлке": ["Детские занятия", "Кондитерские и торты", "Флористика и декор"],
+      "Медицина и аптеки": ["Аптеки и доставка", "Врачи и педиатры", "Экстренная помощь"],
+      "Животные и защита от насекомых": ["Груминг", "Ветклиники и врачи", "Обработка от клещей"]
+    };
 
-    let currentCategory = 'Все';
-    let searchQuery = '';
+    // Исходные данные (будут перезаписаны при загрузке с GitHub)
+    let catalogData = [];
+    let activeRubric = 'Все', activeCategory = 'Все', searchQuery = '';
 
-    // Initialize
-    function init() {
-      renderStats();
-      renderCategoryNav();
-      renderContent();
+    // GitHub Config
+    const GH_CONFIG = {
+      get owner() { return localStorage.getItem('gh_owner') || ''; },
+      set owner(v) { localStorage.setItem('gh_owner', v); },
+      get repo() { return localStorage.getItem('gh_repo') || ''; },
+      set repo(v) { localStorage.setItem('gh_repo', v); },
+      get branch() { return localStorage.getItem('gh_branch') || 'main'; },
+      set branch(v) { localStorage.setItem('gh_branch', v); },
+      get token() { return localStorage.getItem('gh_token') || ''; },
+      set token(v) { localStorage.setItem('gh_token', v); },
+      get isReady() { return !!(this.owner && this.repo && this.token); }
+    };
+
+    // UI Helpers
+    const syncEl = document.getElementById('syncStatus');
+    function showSync(status, msg) {
+      syncEl.className = `sync-status show ${status}`;
+      syncEl.textContent = msg;
+      setTimeout(() => syncEl.classList.remove('show'), 4000);
     }
 
+    // GitHub Sync Logic
+    async function syncToGitHub() {
+      if (!GH_CONFIG.isReady) {
+        showSync('error', '❌ Не настроен GitHub');
+        setTimeout(() => document.getElementById('githubConfigModal').classList.add('open'), 100);
+        return false;
+      }
+
+      showSync('loading', '⏳ Публикация в GitHub...');
+      const apiUrl = `https://api.github.com/repos/${GH_CONFIG.owner}/${GH_CONFIG.repo}/contents/data.json?ref=${GH_CONFIG.branch}`;
+      const headers = { Authorization: `token ${GH_CONFIG.token}`, Accept: 'application/vnd.github.v3+json' };
+
+      try {
+        // 1. Получить текущий файл и его SHA
+        let sha = null, content = [];
+        try {
+          const res = await fetch(apiUrl, { headers });
+          if (res.ok) {
+            const file = await res.json();
+            sha = file.sha;
+            content = JSON.parse(atob(unescape(encodeURIComponent(file.content))));
+          }
+        } catch (e) { /* Файла нет, создадим новый */ }
+
+        // 2. Объединить данные (GitHub -> Local)
+        catalogData.forEach(localItem => {
+          const exists = content.find(c => c.id === localItem.id);
+          if (!exists) content.push(localItem);
+          else {
+            // Обновить отзывы, если есть
+            if (localItem.reviews?.length) exists.reviews = [...(exists.reviews||[]), ...localItem.reviews];
+          }
+        });
+
+        // 3. Закоммитить
+        const payload = {
+          message: `📝 Обновление каталога ${new Date().toLocaleString('ru-RU')}`,
+          content: btoa(unescape(encodeURIComponent(JSON.stringify(content, null, 2)))),
+          branch: GH_CONFIG.branch
+        };
+        if (sha) payload.sha = sha;
+
+        const commitRes = await fetch(apiUrl, { method: 'PUT', headers, body: JSON.stringify(payload) });
+        if (!commitRes.ok) {
+          const err = await commitRes.json();
+          if (err.message?.includes('sha')) return syncToGitHub(); // Retry on conflict
+          throw new Error(err.message || 'Ошибка коммита');
+        }
+
+        showSync('success', '✅ Опубликовано в GitHub');
+        return true;
+      } catch (err) {
+        console.error(err);
+        showSync('error', '❌ Ошибка публикации');
+        return false;
+      }
+    }
+
+    // Data Loading
+    async function loadData() {
+      try {
+        const res = await fetch('data.json', { cache: 'no-store' });
+        if (res.ok) catalogData = await res.json();
+      } catch (e) { /* Fallback: empty */ }
+      renderAll();
+    }
+
+    function renderAll() { renderStats(); renderRubrics(); renderCategories(); renderGrid(); }
+    
     function renderStats() {
-      const categories = [...new Set(catalogData.map(item => item.category))];
-      const totalContacts = catalogData.length;
-      const withPhones = catalogData.filter(item => item.phone).length;
-      
       document.getElementById('stats').innerHTML = `
-        <div class="stat-card">
-          <div class="stat-number">${categories.length}</div>
-          <div class="stat-label">Категорий</div>
-        </div>
-        <div class="stat-card">
-          <div class="stat-number">${totalContacts}</div>
-          <div class="stat-label">Контактов</div>
-        </div>
-        <div class="stat-card">
-          <div class="stat-number">${withPhones}</div>
-          <div class="stat-label">С телефонами</div>
-        </div>
+        <div class="stat"><div class="stat-num">${Object.keys(RUBRICS_CONFIG).length}</div><div class="stat-label">Рубрик</div></div>
+        <div class="stat"><div class="stat-num">${catalogData.length}</div><div class="stat-label">Контактов</div></div>
       `;
     }
 
-function renderCategoryNav() {
-  const categories = ['Все', ...new Set(catalogData.map(item => item.category))];
-  const icons = {
-    'Все': '🏠',
-    'Бытовые услуги': '🔧',
-    'Строительство': '🏗️',
-    'Еда и рестораны': '🍽️',
-    'Магазины и доставки': '🛒',
-    'Отдых и развлечения': '🎉',
-    'Мероприятия в посёлке': '🎪',
-    'Медицина и аптеки': '🏥',
-    'Животные и защита от насекомых': '🐾'
-  };
-  
-  const nav = document.getElementById('categoryNav');
-  nav.innerHTML = categories.map(cat => `
-    <button class="nav-btn ${cat === currentCategory ? 'active' : ''}" onclick="setCategory('${cat}')">
-      ${icons[cat] || '📋'} ${cat}
-    </button>
-  `).join('');
-}
-      
-      const nav = document.getElementById('categoryNav');
-      nav.innerHTML = categories.map(cat => `
-        <button class="nav-btn ${cat === currentCategory ? 'active' : ''}" onclick="setCategory('${cat}')">
-          ${icons[cat] || '📋'} ${cat}
-        </button>
-      `).join('');
+    function renderRubrics() {
+      const c = document.getElementById('rubricTabs');
+      c.innerHTML = `<button class="tab-btn ${activeRubric==='Все'?'active':''}" onclick="setRubric('Все')">🏠 Все</button>`;
+      Object.keys(RUBRICS_CONFIG).forEach(r => c.innerHTML += `<button class="tab-btn ${activeRubric===r?'active':''}" onclick="setRubric('${r}')">${getRubricIcon(r)} ${r}</button>`);
+    }
+    function getRubricIcon(r) { return {'Бытовые услуги':'🔧','Строительство':'🏗️','Еда и рестораны':'🍽️','Магазины и доставки':'🛒','Отдых и развлечения':'🎉','Мероприятия в посёлке':'🎪','Медицина и аптеки':'🏥','Животные и защита от насекомых':'🐾'}[r]||'📋'; }
+    function setRubric(r) { activeRubric = r; activeCategory = 'Все'; renderAll(); }
+    function setCategory(c) { activeCategory = c; renderCategories(); renderGrid(); }
+    function renderCategories() {
+      const c = document.getElementById('subcatPills');
+      if (activeRubric === 'Все') { c.innerHTML = '<span style="color:var(--text-light); font-size:0.85rem;">Выберите рубрику для фильтрации</span>'; return; }
+      c.innerHTML = ['Все', ...RUBRICS_CONFIG[activeRubric]].map(cat => `<button class="pill ${activeCategory===cat?'active':''}" onclick="setCategory('${cat}')">${cat}</button>`).join('');
     }
 
-    function setCategory(cat) {
-      currentCategory = cat;
-      renderCategoryNav();
-      renderContent();
-    }
+    function calcRating(reviews) { if (!reviews?.length) return { avg: 0, count: 0 }; const s = reviews.reduce((a,r)=>a+r.rating,0); return { avg:(s/reviews.length).toFixed(1), count:reviews.length }; }
+    function applyFilters() { searchQuery = document.getElementById('searchInput').value.toLowerCase(); renderGrid(); }
+    document.getElementById('searchInput').addEventListener('input', applyFilters);
 
-    function filterData() {
-      searchQuery = document.getElementById('searchInput').value.toLowerCase();
-      renderContent();
-    }
-
-    document.getElementById('searchInput').addEventListener('input', filterData);
-    document.getElementById('searchInput').addEventListener('keypress', (e) => {
-      if (e.key === 'Enter') filterData();
-    });
-
-    function renderContent() {
+    function renderGrid() {
       const filtered = catalogData.filter(item => {
-        const matchesCategory = currentCategory === 'Все' || item.category === currentCategory;
-        const matchesSearch = !searchQuery || 
-          item.name.toLowerCase().includes(searchQuery) ||
-          (item.company && item.company.toLowerCase().includes(searchQuery)) ||
-          (item.phone && item.phone.includes(searchQuery)) ||
-          (item.desc && item.desc.toLowerCase().includes(searchQuery));
-        return matchesCategory && matchesSearch;
+        const mR = activeRubric === 'Все' || item.rubric === activeRubric;
+        const mC = activeCategory === 'Все' || item.category === activeCategory;
+        const mS = !searchQuery || `${item.name} ${item.company} ${item.phone} ${item.desc}`.toLowerCase().includes(searchQuery);
+        return mR && mC && mS;
       });
-
-      const content = document.getElementById('content');
+      const grid = document.getElementById('grid');
+      if (!filtered.length) { grid.innerHTML = `<div class="empty"><span>🔍</span><h3>Ничего не найдено</h3><p>Измените параметры поиска</p></div>`; return; }
       
-      if (filtered.length === 0) {
-        content.innerHTML = `
-          <div class="empty-state">
-            <span>🔍</span>
-            <h3>Ничего не найдено</h3>
-            <p>Попробуйте изменить параметры поиска или категорию</p>
-          </div>
-        `;
-        return;
-      }
-
-      const grouped = filtered.reduce((acc, item) => {
-        if (!acc[item.category]) acc[item.category] = [];
-        acc[item.category].push(item);
-        return acc;
-      }, {});
-
-      let html = '';
-      for (const [category, items] of Object.entries(grouped)) {
-        html += `<h2 class="section-title">${getCategoryIcon(category)} ${category}</h2>`;
-        html += `<div class="grid">`;
-        html += items.map(item => createCard(item)).join('');
-        html += `</div>`;
-      }
-      
-      content.innerHTML = html;
+      grid.innerHTML = filtered.map(item => {
+        const { avg, count } = calcRating(item.reviews);
+        const stars = avg > 0 ? '★'.repeat(Math.round(avg)) + '☆'.repeat(5-Math.round(avg)) : '☆☆☆☆☆';
+        const phones = item.phone ? item.phone.split(',').map(p=>p.trim()).map(p=>`<a href="tel:${p.replace(/\D/g,'')}" class="phone-btn">📞 ${p}</a>`).join(' ') : '';
+        const web = item.web ? `<a href="${item.web}" target="_blank" class="site-link">🌐 Перейти</a>` : '';
+        return `
+          <div class="card">
+            <div class="card-header"><div><div class="card-title">${item.name}</div><div class="card-company">${item.company||''}</div></div><span class="badge">${item.rubric}</span></div>
+            <div class="rating-row"><span class="stars">${stars}</span><span class="rating-count">${avg>0?avg:'—'} (${count})</span></div>
+            ${phones}<span class="tag">📌 ${item.category}</span>
+            ${item.desc?`<div class="card-desc">${item.desc}</div>`:''}${item.price?`<div class="card-price">💰 ${item.price}</div>`:''}${web?`<div style="margin-top:0.5rem">${web}</div>`:''}
+            <div class="card-footer"><span>👤 ${item.author||'Житель'}</span><button class="review-btn" onclick="openReviewModal(${item.id})">✍️ Оставить отзыв</button></div>
+          </div>`;
+      }).join('');
     }
 
-function getCategoryIcon(category) {
-  const icons = {
-    'Бытовые услуги': '🔧',
-    'Строительство': '🏗️',
-    'Еда и рестораны': '🍽️',
-    'Магазины и доставки': '🛒',
-    'Отдых и развлечения': '🎉',
-    'Мероприятия в посёлке': '🎪',
-    'Медицина и аптеки': '🏥',
-    'Животные и защита от насекомых': '🐾'
-  };
-  return icons[category] || '📋';
-}
+    // Modals & Forms
+    const addModal = document.getElementById('addModal');
+    document.getElementById('openAddModal').onclick = () => { addModal.classList.add('open'); updateFormCategories(); };
+    document.getElementById('closeAddModal').onclick = document.getElementById('cancelForm').onclick = () => addModal.classList.remove('open');
+    addModal.addEventListener('click', e => { if(e.target===addModal) addModal.classList.remove('open'); });
 
-    function createCard(item) {
-      const phoneLinks = item.phone ? item.phone.split(',').map(p => p.trim()).map(p => {
-        const cleanPhone = p.replace(/\D/g, '');
-        return `<a href="tel:${cleanPhone}" class="card-phone">📞 ${p}</a>`;
-      }).join(' ') : '';
+    function setupForm() {
+      const sel = document.getElementById('f_rubric');
+      sel.innerHTML = `<option value="">Выберите рубрику</option>` + Object.keys(RUBRICS_CONFIG).map(r=>`<option value="${r}">${r}</option>`).join('');
+      sel.addEventListener('change', updateFormCategories);
 
-      const websiteLink = item.website ? `<a href="${item.website}" target="_blank" style="color: var(--primary); text-decoration: none; font-weight: 600;">🌐 Сайт</a>` : '';
-
-      return `
-        <div class="card">
-          <div class="card-header">
-            <div>
-              <div class="card-title">${item.name}</div>
-              ${item.company ? `<div class="card-company">${item.company}</div>` : ''}
-            </div>
-            <span class="category-badge">${item.category}</span>
-          </div>
-          ${phoneLinks}
-          ${item.desc ? `<div class="card-desc">${item.desc}</div>` : ''}
-          ${item.price ? `<div class="card-price">💰 ${item.price}</div>` : ''}
-          ${websiteLink ? `<div style="margin-top: 0.5rem;">${websiteLink}</div>` : ''}
-          <div class="card-meta">
-            ${item.author ? `<span class="card-author"> Добавил: ${item.author}</span>` : '<span></span>'}
-          </div>
-        </div>
-      `;
+      document.getElementById('addForm').onsubmit = async e => {
+        e.preventDefault();
+        const newItem = { id: Date.now(), rubric: document.getElementById('f_rubric').value, category: document.getElementById('f_cat').value.trim(), name: document.getElementById('f_name').value.trim(), company: document.getElementById('f_company').value.trim(), phone: document.getElementById('f_phone').value.trim(), desc: document.getElementById('f_desc').value.trim(), price: document.getElementById('f_price').value.trim(), web: document.getElementById('f_web').value.trim(), author: document.getElementById('f_author').value.trim(), reviews: [] };
+        if(!RUBRICS_CONFIG[newItem.rubric]?.includes(newItem.category)) RUBRICS_CONFIG[newItem.rubric].push(newItem.category);
+        catalogData.unshift(newItem);
+        renderAll(); addModal.classList.remove('open'); e.target.reset();
+        await syncToGitHub();
+      };
     }
+    setupForm();
+    function updateFormCategories() { const r = document.getElementById('f_rubric').value; document.getElementById('catList').innerHTML = r && RUBRICS_CONFIG[r] ? RUBRICS_CONFIG[r].map(c=>`<option value="${c}">`).join('') : ''; }
 
-    function exportData() {
-      const dataStr = "text/json;charset=utf-8," + encodeURIComponent(JSON.stringify(catalogData, null, 2));
-      const a = document.createElement('a');
-      a.href = dataStr;
-      a.download = `smartville_catalog_${new Date().toISOString().slice(0,10)}.json`;
-      a.click();
-    }
+    const reviewModal = document.getElementById('reviewModal');
+    function openReviewModal(id) { document.getElementById('r_masterId').value = id; reviewModal.classList.add('open'); resetStars(); }
+    document.getElementById('closeReviewModal').onclick = document.getElementById('cancelReviewModal').onclick = () => reviewModal.classList.remove('open');
+    reviewModal.addEventListener('click', e => { if(e.target===reviewModal) reviewModal.classList.remove('open'); });
 
-    // Start
-    init();
+    const starPicker = document.getElementById('starPicker');
+    function resetStars() { document.getElementById('r_rating').value = 5; starPicker.querySelectorAll('span').forEach((s,i)=>s.classList.toggle('active', i<5)); }
+    starPicker.querySelectorAll('span').forEach(s => { s.onclick = () => { const v = parseInt(s.dataset.v); document.getElementById('r_rating').value = v; starPicker.querySelectorAll('span').forEach(st=>st.classList.toggle('active', parseInt(st.dataset.v)<=v)); }; });
+
+    document.getElementById('reviewForm').onsubmit = async e => {
+      e.preventDefault();
+      const id = parseInt(document.getElementById('r_masterId').value);
+      const item = catalogData.find(i=>i.id===id); if(!item) return;
+      item.reviews = item.reviews||[];
+      item.reviews.unshift({ author: document.getElementById('r_author').value.trim(), rating: parseInt(document.getElementById('r_rating').value), text: document.getElementById('r_text').value.trim(), date: new Date().toLocaleDateString('ru-RU') });
+      renderAll(); reviewModal.classList.remove('open'); e.target.reset();
+      await syncToGitHub();
+    };
+
+    // GitHub Config Modal
+    document.getElementById('openGithubConfig').onclick = () => {
+      document.getElementById('gh_owner').value = GH_CONFIG.owner;
+      document.getElementById('gh_repo').value = GH_CONFIG.repo;
+      document.getElementById('gh_branch').value = GH_CONFIG.branch;
+      document.getElementById('gh_token').value = GH_CONFIG.token;
+      document.getElementById('githubConfigModal').classList.add('open');
+    };
+    document.getElementById('closeGithubConfig').onclick = document.getElementById('cancelGithubConfig').onclick = () => document.getElementById('githubConfigModal').classList.remove('open');
+    document.getElementById('githubConfigForm').onsubmit = e => {
+      e.preventDefault();
+      GH_CONFIG.owner = document.getElementById('gh_owner').value.trim();
+      GH_CONFIG.repo = document.getElementById('gh_repo').value.trim();
+      GH_CONFIG.branch = document.getElementById('gh_branch').value.trim();
+      GH_CONFIG.token = document.getElementById('gh_token').value.trim();
+      document.getElementById('githubConfigModal').classList.remove('open');
+      showSync('success', '✅ Настройки сохранены');
+    };
+
+    document.addEventListener('keydown', e => { if(e.key==='Escape') { addModal.classList.remove('open'); reviewModal.classList.remove('open'); document.getElementById('githubConfigModal').classList.remove('open'); }});
+    loadData();
   </script>
 </body>
 </html>
