@@ -118,7 +118,7 @@
   <div class="search-wrap">
     <div class="search-box">
       <input type="text" id="searchInput" placeholder="🔍 Поиск по названию, телефону, услуге или имени...">
-      <button onclick="applyFilters()">Найти</button>
+      <button id="searchBtn">Найти</button>
     </div>
   </div>
 
@@ -148,8 +148,8 @@
       <button class="close-btn" id="closeAddModal">&times;</button>
       <h2>Добавить новый контакт</h2>
       <form id="addForm">
-        <div class="form-group"><label for="f_rubric">Рубрика</label><select id="f_rubric" required></select></div>
-        <div class="form-group"><label for="f_cat">Категория</label><input type="text" id="f_cat" list="catList" placeholder="Напр: Сантехника, Ветклиника..." required><datalist id="catList"></datalist></div>
+        <div class="form-group"><label for="f_rubric">Рубрика <span style="color:var(--text-light); font-weight:400; font-size:0.8em;">(выберите или введите новую)</span></label><input type="text" id="f_rubric" list="rubricList" placeholder="Напр: Бытовые услуги, Медицина..." required><datalist id="rubricList"></datalist></div>
+        <div class="form-group"><label for="f_cat">Категория <span style="color:var(--text-light); font-weight:400; font-size:0.8em;">(выберите или введите новую)</span></label><input type="text" id="f_cat" list="catList" placeholder="Напр: Сантехника, Ветклиника..." required><datalist id="catList"></datalist></div>
         <div class="form-group"><label for="f_name">Наименование услуги</label><input type="text" id="f_name" required placeholder="Напр: Обслуживание котлов"></div>
         <div class="form-group"><label for="f_company">Имя / Компания</label><input type="text" id="f_company" placeholder="Напр: Александр / МосОблГаз"></div>
         <div class="form-group"><label for="f_phone">Телефон</label><input type="tel" id="f_phone" required placeholder="+7 (999) 000-00-00"></div>
@@ -197,226 +197,284 @@
   </div>
 
   <script>
-    // Конфигурация рубрик
-    const RUBRICS_CONFIG = {
-      "Бытовые услуги": ["Водоочистка", "Сантехника", "Септики", "Электрика", "Окна и двери", "Котлы и газ", "Бытовая техника", "Вентиляция и дымоходы", "Вывоз мусора", "Уборка и водители"],
-      "Строительство": ["Строительство домов", "Вывоз мусора", "Благоустройство и плитка", "Сыпучие материалы", "Колодцы и скважины", "Лестницы", "Плотницкие работы"],
-      "Еда и рестораны": ["Рестораны и кафе", "Доставка пиццы", "Суши и роллы", "Фермерские продукты", "Онлайн-конструкторы"],
-      "Магазины и доставки": ["Рыба и морепродукты", "Праздничное оформление"],
-      "Отдых и развлечения": ["Базы отдыха и отели", "Активный отдых", "Детские праздники и квесты"],
-      "Мероприятия в посёлке": ["Детские занятия", "Кондитерские и торты", "Флористика и декор"],
-      "Медицина и аптеки": ["Аптеки и доставка", "Врачи и педиатры", "Экстренная помощь"],
-      "Животные и защита от насекомых": ["Груминг", "Ветклиники и врачи", "Обработка от клещей"]
-    };
+    document.addEventListener('DOMContentLoaded', () => {
+      // Дефолтная конфигурация
+      const DEFAULT_RUBRICS = {
+        "Бытовые услуги": ["Водоочистка", "Сантехника", "Септики", "Электрика", "Окна и двери", "Котлы и газ", "Бытовая техника", "Вентиляция и дымоходы", "Вывоз мусора", "Уборка и водители"],
+        "Строительство": ["Строительство домов", "Вывоз мусора", "Благоустройство и плитка", "Сыпучие материалы", "Колодцы и скважины", "Лестницы", "Плотницкие работы"],
+        "Еда и рестораны": ["Рестораны и кафе", "Доставка пиццы", "Суши и роллы", "Фермерские продукты", "Онлайн-конструкторы"],
+        "Магазины и доставки": ["Рыба и морепродукты", "Праздничное оформление"],
+        "Отдых и развлечения": ["Базы отдыха и отели", "Активный отдых", "Детские праздники и квесты"],
+        "Мероприятия в посёлке": ["Детские занятия", "Кондитерские и торты", "Флористика и декор"],
+        "Медицина и аптеки": ["Аптеки и доставка", "Врачи и педиатры", "Экстренная помощь"],
+        "Животные и защита от насекомых": ["Груминг", "Ветклиники и врачи", "Обработка от клещей"]
+      };
 
-    // Исходные данные (будут перезаписаны при загрузке с GitHub)
-    let catalogData = [];
-    let activeRubric = 'Все', activeCategory = 'Все', searchQuery = '';
+      // Загрузка конфига из localStorage или использование дефолта
+      let RUBRICS_CONFIG = JSON.parse(localStorage.getItem('sv_rubrics_config')) || JSON.parse(JSON.stringify(DEFAULT_RUBRICS));
 
-    // GitHub Config
-    const GH_CONFIG = {
-      get owner() { return localStorage.getItem('gh_owner') || ''; },
-      set owner(v) { localStorage.setItem('gh_owner', v); },
-      get repo() { return localStorage.getItem('gh_repo') || ''; },
-      set repo(v) { localStorage.setItem('gh_repo', v); },
-      get branch() { return localStorage.getItem('gh_branch') || 'main'; },
-      set branch(v) { localStorage.setItem('gh_branch', v); },
-      get token() { return localStorage.getItem('gh_token') || ''; },
-      set token(v) { localStorage.setItem('gh_token', v); },
-      get isReady() { return !!(this.owner && this.repo && this.token); }
-    };
+      const FALLBACK_DATA = [
+        {id:1,rubric:"Бытовые услуги",category:"Водоочистка",name:"Водоочистка (фильтры, настройка)",company:"Алексей",phone:"89262805485",desc:"Замена фильтров, диагностика",price:"2500 - 3000 ₽",author:"4/13 Алексей",web:"",reviews:[]},
+        {id:2,rubric:"Бытовые услуги",category:"Сантехника",name:"Сантехник",company:"Илья",phone:"89031538521",desc:"Показался компетентным",price:"",author:"4/13 Алексей",web:"",reviews:[]},
+        {id:3,rubric:"Бытовые услуги",category:"Септики",name:"Обслуживание септиков",company:"Александр",phone:"8-925-927-00-79",desc:"Хороший специалист, приезжает в назначенное время",price:"4500 ₽",author:"4/13 Алексей",web:"",reviews:[]},
+        {id:4,rubric:"Бытовые услуги",category:"Септики",name:"Обслуживание септиков",company:"",phone:"79771130924",desc:"",price:"5000 ₽",author:"",web:"",reviews:[]},
+        {id:5,rubric:"Бытовые услуги",category:"Септики",name:"Обслуживание септиков",company:"Владимир",phone:"79268101131",desc:"",price:"4500-5000 ₽",author:"",web:"",reviews:[]},
+        {id:6,rubric:"Бытовые услуги",category:"Септики",name:"Обслуживание септиков",company:"Александр",phone:"7 925 347-80-10",desc:"",price:"",author:"",web:"",reviews:[]},
+        {id:7,rubric:"Бытовые услуги",category:"Уборка и водители",name:"Частный водитель",company:"",phone:"8 (916) 999-39-19",desc:"",price:"",author:"4/13 Алексей",web:"",reviews:[]},
+        {id:8,rubric:"Бытовые услуги",category:"Уборка и водители",name:"Уборщица",company:"Светлана",phone:"7 (962) 982-89-54",desc:"",price:"",author:"",web:"",reviews:[]},
+        {id:9,rubric:"Бытовые услуги",category:"Электрика",name:"Электрик",company:"Николай",phone:"79037993176",desc:"",price:"",author:"",web:"",reviews:[]},
+        {id:10,rubric:"Бытовые услуги",category:"Окна и двери",name:"Оконщик",company:"Андрей",phone:"+7 926 393-07-55",desc:"Сложные случаи, работает как частник, исполнительный",price:"",author:"",web:"",reviews:[]},
+        {id:11,rubric:"Бытовые услуги",category:"Окна и двери",name:"Установка дверей",company:"Виталий",phone:"79296251691",desc:"",price:"1500 ₽ — выезд",author:"Мария",web:"",reviews:[]},
+        {id:12,rubric:"Бытовые услуги",category:"Окна и двери",name:"Установка дверей",company:"Юрий",phone:"89646461842, 89603068844",desc:"",price:"",author:"",web:"",reviews:[]},
+        {id:13,rubric:"Бытовые услуги",category:"Окна и двери",name:"Окна",company:"Николай",phone:"79035804104",desc:"",price:"",author:"от Дениса",web:"",reviews:[]},
+        {id:14,rubric:"Бытовые услуги",category:"Вывоз мусора",name:"Вывоз мусора",company:"Ирина",phone:"89096981909",desc:"",price:"",author:"",web:"",reviews:[]},
+        {id:15,rubric:"Бытовые услуги",category:"Котлы и газ",name:"Обслуживание котлов",company:"Александр",phone:"9959193598",desc:"Сертифицированный специалист по газовому оборудованию, официальный договор с Мособлгаз. Дешевле, делает на совесть.",price:"",author:"Наталья",web:"",reviews:[]},
+        {id:16,rubric:"Бытовые услуги",category:"Котлы и газ",name:"Обслуживание котлов",company:"Андрей",phone:"89261290121",desc:"Рекомендуют",price:"",author:"Марина",web:"",reviews:[]},
+        {id:17,rubric:"Бытовые услуги",category:"Котлы и газ",name:"Обслуживание котлов",company:"Сергей (МосОблГаз)",phone:"7 905 128-17-59, 7 919 999-03-09",desc:"",price:"",author:"Алексей С.",web:"",reviews:[]},
+        {id:18,rubric:"Бытовые услуги",category:"Бытовая техника",name:"Ремонт стиральных машин",company:"Александр Bosh",phone:"89166433047",desc:"",price:"",author:"",web:"",reviews:[]},
+        {id:19,rubric:"Бытовые услуги",category:"Вентиляция и дымоходы",name:"Вентиляция и дымоходы",company:"Евгений",phone:"7 903 012-97-93",desc:"",price:"",author:"",web:"",reviews:[]},
+        {id:20,rubric:"Бытовые услуги",category:"Строительные работы",name:"Строительные работы, сантехника",company:"Сергей",phone:"89031709338",desc:"Грамотные ребята, адекватные цены",price:"",author:"",web:"",reviews:[]},
+        {id:21,rubric:"Строительство",category:"Строительство домов",name:"Строительство домов",company:"Владимир",phone:"89035685784",desc:"Опытный, без креатива",price:"Дешевле рынка частников",author:"4/13 Алексей",web:"",reviews:[]},
+        {id:22,rubric:"Строительство",category:"Вывоз мусора",name:"Вывоз строительного мусора",company:"Ирина",phone:"89096981909",desc:"Не подводили со сроками",price:"8000 ₽ / 8 м³",author:"4/13 Алексей",web:"",reviews:[]},
+        {id:23,rubric:"Строительство",category:"Вывоз мусора",name:"Вывоз мусора — Дмитров",company:"",phone:"8496224109",desc:"",price:"",author:"Вера",web:"",reviews:[]},
+        {id:24,rubric:"Строительство",category:"Благоустройство и плитка",name:"Тротуарная плитка, земляные работы",company:"Батюшково",phone:"89263445712",desc:"",price:"",author:"4/13 Алексей",web:"",reviews:[]},
+        {id:25,rubric:"Строительство",category:"Сыпучие материалы",name:"Песок, земля, щебень",company:"Батюшково",phone:"89858206588",desc:"",price:"Песок: 5 м³ — 4000 ₽, 8 м³ — 5000 ₽",author:"4/13 Алексей",web:"",reviews:[]},
+        {id:26,rubric:"Строительство",category:"Колодцы и скважины",name:"Колодцы — копка, ремонт",company:"Рафаэль",phone:"89670854222",desc:"Контакт старый",price:"",author:"",web:"",reviews:[]},
+        {id:27,rubric:"Строительство",category:"Колодцы и скважины",name:"Колодцы, вода",company:"Сергей",phone:"89067396945",desc:"Контакт старый",price:"",author:"",web:"",reviews:[]},
+        {id:28,rubric:"Строительство",category:"Лестницы",name:"Лестницы",company:"Василий",phone:"79999948998",desc:"",price:"",author:"",web:"",reviews:[]},
+        {id:29,rubric:"Строительство",category:"Лестницы",name:"Лестницы",company:"Дмитрий",phone:"79168011607",desc:"",price:"",author:"",web:"",reviews:[]},
+        {id:30,rubric:"Строительство",category:"Лестницы",name:"Лестницы",company:"Алексей",phone:"79252627220",desc:"",price:"",author:"",web:"",reviews:[]},
+        {id:31,rubric:"Строительство",category:"Плотницкие работы",name:"Плотник",company:"Сергей",phone:"79851811931",desc:"",price:"",author:"",web:"",reviews:[]},
+        {id:32,rubric:"Еда и рестораны",category:"Рестораны и кафе",name:"Ресторан в X-LAND",company:"XLand",phone:"89031420916",desc:"Меню кафе в Инстаграм: @La__Moroz",price:"200-300 ₽",author:"4/13 Александра",web:"",reviews:[]},
+        {id:33,rubric:"Еда и рестораны",category:"Рестораны и кафе",name:"Ресторан Бисквит (Дмитров)",company:"",phone:"7(925)146-06-83",desc:"Вкусная еда. Доставка ~1.5-2 часа",price:"Ср. чек 1500 ₽",author:"4/13 Алексей",web:"https://restoran-dmitrov.ru/",reviews:[]},
+        {id:34,rubric:"Еда и рестораны",category:"Доставка пиццы",name:"Доставка пиццы",company:"",phone:"84951503859",desc:"Хорошее меню, вкусные блюда",price:"",author:"Алексей",web:"https://oscocafe.ru/",reviews:[]},
+        {id:35,rubric:"Еда и рестораны",category:"Суши и роллы",name:"Суши Барракуда (Дмитров)",company:"",phone:"7916-501-11-77",desc:"Суши, роллы, пицца, супы",price:"",author:"",web:"https://sushi-dmitrov.ru/",reviews:[]},
+        {id:36,rubric:"Еда и рестораны",category:"Доставка пиццы",name:"Доставка пиццы",company:"Yandex Go",phone:"",desc:"Пицца Д'миро — недорогая, бесплатная доставка в посёлок",price:"",author:"",web:"",reviews:[]},
+        {id:37,rubric:"Еда и рестораны",category:"Рестораны и кафе",name:"Доставка еды",company:"",phone:"89258988898, 84951888898",desc:"",price:"",author:"Ксения",web:"http://мясонауглях.рус/",reviews:[]},
+        {id:38,rubric:"Еда и рестораны",category:"Онлайн-конструкторы",name:"Пицца",company:"",phone:"",desc:"Конструктор пиццы онлайн",price:"",author:"",web:"http://dmiro.azurewebsites.net",reviews:[]},
+        {id:39,rubric:"Еда и рестораны",category:"Фермерские продукты",name:"Мясные фермерские продукты",company:"Колистратов Дмитрий",phone:"79032387062",desc:"@kolistratovdmitrii. Оксана рекомендует",price:"",author:"",web:"",reviews:[]},
+        {id:40,rubric:"Магазины и доставки",category:"Рыба и морепродукты",name:"Доставка рыбы",company:"Fishorder.ru",phone:"",desc:"",price:"",author:"",web:"",reviews:[]},
+        {id:41,rubric:"Магазины и доставки",category:"Праздничное оформление",name:"Шарики для оформления",company:"Ирина",phone:"8 (909) 955-33-28",desc:"Instagram: @vozdushnaya_radost_dm",price:"",author:"Татьяна",web:"https://instagram.com/vozdushnaya_radost_dm",reviews:[]},
+        {id:42,rubric:"Отдых и развлечения",category:"Базы отдыха и отели",name:"Свежий ветер (Дом отдыха)",company:"",phone:"8(800)-707-11-90",desc:"",price:"8000 ₽ / сутки",author:"",web:"https://sv-spa-hotel.ru/",reviews:[]},
+        {id:43,rubric:"Отдых и развлечения",category:"Активный отдых",name:"Страусиная ферма",company:"",phone:"",desc:"Яйца можно купить, но не всегда бывают",price:"",author:"",web:"https://strauslend.ru/",reviews:[]},
+        {id:44,rubric:"Отдых и развлечения",category:"Базы отдыха и отели",name:"Боярская усадьба (Дом отдыха)",company:"",phone:"7 495 661-88-53",desc:"",price:"",author:"",web:"https://www.boyarskoe.com/",reviews:[]},
+        {id:45,rubric:"Отдых и развлечения",category:"Базы отдыха и отели",name:"Усадьба Батюшково",company:"",phone:"7 (925) 518-6282",desc:"Большой дом с бассейном, подходит для мероприятий",price:"от 10000 ₽ / сутки",author:"",web:"https://www.ecoclub-resort.ru/",reviews:[]},
+        {id:46,rubric:"Отдых и развлечения",category:"Базы отдыха и отели",name:"Алирико (отель, ресторан)",company:"",phone:"7 (926) 534-43-79",desc:"",price:"от 2000 ₽ / сутки",author:"",web:"https://aliriko.ru/",reviews:[]},
+        {id:47,rubric:"Отдых и развлечения",category:"Активный отдых",name:"Боулинг в X-Land",company:"",phone:"7(495) 649-50-02",desc:"Лучше заказывать заранее",price:"950 ₽ / час",author:"",web:"http://xlandpark.ru/",reviews:[]},
+        {id:48,rubric:"Отдых и развлечения",category:"Детские праздники и квесты",name:"Детские праздники и корпоративы",company:"Алексей — клуб Патриот",phone:"89646404343",desc:"Лазертаг, пейнтбол, квесты, форт Баярд",price:"",author:"",web:"https://patriotdmitrov.ru/",reviews:[]},
+        {id:49,rubric:"Мероприятия в посёлке",category:"Детские занятия",name:"Занятие для детей",company:"Анна",phone:"7 916 127-81-99",desc:"Предоставление террасы на участке 11/24",price:"",author:"4/13 Алексей",web:"",reviews:[]},
+        {id:50,rubric:"Мероприятия в посёлке",category:"Кондитерские и торты",name:"Выпечка вкусных десертов",company:"Ксения",phone:"7 926 701-47-62",desc:"Капкейки, Кенди-бар",price:"",author:"4/13 Алексей",web:"http://tapasmarbella.ru/",reviews:[]},
+        {id:51,rubric:"Мероприятия в посёлке",category:"Флористика и декор",name:"Флористика, композиции из цветов",company:"Мария",phone:"7 925 706-26-49",desc:"",price:"",author:"Ксения",web:"",reviews:[]},
+        {id:52,rubric:"Медицина и аптеки",category:"Аптеки и доставка",name:"Аптека доставка",company:"Superapteka.ru",phone:"",desc:"Онлайн-заказ лекарств с доставкой",price:"",author:"",web:"https://superapteka.ru",reviews:[]},
+        {id:53,rubric:"Медицина и аптеки",category:"Врачи и педиатры",name:"Врач-педиатр",company:"Мария Геннадьевна",phone:"89031370001",desc:"Выезжает на дом",price:"",author:"",web:"",reviews:[]},
+        {id:54,rubric:"Медицина и аптеки",category:"Экстренная помощь",name:"Подмосковный номер по Ковид",company:"",phone:"88005505030",desc:"Присылают врача, нужен только полис",price:"",author:"",web:"",reviews:[]},
+        {id:55,rubric:"Животные и защита от насекомых",category:"Груминг",name:"Стрижка собак",company:"Ирина",phone:"89163860065",desc:"Приезжает в посёлок, стрижёт быстро и качественно. Очень приятный мастер.",price:"1500-2000 ₽",author:"4/13 Александра",web:"",reviews:[]},
+        {id:56,rubric:"Животные и защита от насекомых",category:"Ветклиники и врачи",name:"Ветклиника Дмитров",company:"",phone:"74997077680",desc:"",price:"",author:"",web:"",reviews:[]},
+        {id:57,rubric:"Животные и защита от насекомых",category:"Ветклиники и врачи",name:"Ветеринар",company:"",phone:"79104084706",desc:"",price:"",author:"",web:"",reviews:[]},
+        {id:58,rubric:"Животные и защита от насекомых",category:"Ветклиники и врачи",name:"Ветклиника в Икше",company:"ВетБиоПро",phone:"74955186291",desc:"",price:"",author:"",web:"",reviews:[]},
+        {id:59,rubric:"Животные и защита от насекомых",category:"Ветклиники и врачи",name:"Ветврач Икша (выезд)",company:"Наталья",phone:"79035296814",desc:"Выезд на дом",price:"",author:"",web:"",reviews:[]},
+        {id:60,rubric:"Животные и защита от насекомых",category:"Обработка от клещей",name:"Обработка участка от клещей",company:"GardenReview",phone:"79167844122",desc:"Профессиональная дезинсекция",price:"500 ₽ / сотка",author:"",web:"http://gardenreview.ru/",reviews:[]}
+      ];
 
-    // UI Helpers
-    const syncEl = document.getElementById('syncStatus');
-    function showSync(status, msg) {
-      syncEl.className = `sync-status show ${status}`;
-      syncEl.textContent = msg;
-      setTimeout(() => syncEl.classList.remove('show'), 4000);
-    }
+      let catalogData = [...FALLBACK_DATA];
+      let activeRubric = 'Все';
+      let activeCategory = 'Все';
+      let searchQuery = '';
 
-    // GitHub Sync Logic
-    async function syncToGitHub() {
-      if (!GH_CONFIG.isReady) {
-        showSync('error', '❌ Не настроен GitHub');
-        setTimeout(() => document.getElementById('githubConfigModal').classList.add('open'), 100);
-        return false;
+      const els = {
+        stats: document.getElementById('stats'), rubricTabs: document.getElementById('rubricTabs'), subcatPills: document.getElementById('subcatPills'),
+        grid: document.getElementById('grid'), searchInput: document.getElementById('searchInput'), searchBtn: document.getElementById('searchBtn'),
+        syncStatus: document.getElementById('syncStatus'), openAddModal: document.getElementById('openAddModal'),
+        addModal: document.getElementById('addModal'), closeAddModal: document.getElementById('closeAddModal'), cancelForm: document.getElementById('cancelForm'),
+        addForm: document.getElementById('addForm'), f_rubric: document.getElementById('f_rubric'), f_cat: document.getElementById('f_cat'),
+        rubricList: document.getElementById('rubricList'), catList: document.getElementById('catList'), f_phone: document.getElementById('f_phone'),
+        reviewModal: document.getElementById('reviewModal'), closeReviewModal: document.getElementById('closeReviewModal'), cancelReviewModal: document.getElementById('cancelReviewModal'),
+        reviewForm: document.getElementById('reviewForm'), r_masterId: document.getElementById('r_masterId'), starPicker: document.getElementById('starPicker'),
+        openGithubConfig: document.getElementById('openGithubConfig'), githubConfigModal: document.getElementById('githubConfigModal'),
+        closeGithubConfig: document.getElementById('closeGithubConfig'), cancelGithubConfig: document.getElementById('cancelGithubConfig'),
+        githubConfigForm: document.getElementById('githubConfigForm')
+      };
+
+      const GH_CONFIG = {
+        get owner() { return localStorage.getItem('gh_owner') || ''; },
+        set owner(v) { localStorage.setItem('gh_owner', v); },
+        get repo() { return localStorage.getItem('gh_repo') || ''; },
+        set repo(v) { localStorage.setItem('gh_repo', v); },
+        get branch() { return localStorage.getItem('gh_branch') || 'main'; },
+        set branch(v) { localStorage.setItem('gh_branch', v); },
+        get token() { return localStorage.getItem('gh_token') || ''; },
+        set token(v) { localStorage.setItem('gh_token', v); },
+        get isReady() { return !!(this.owner && this.repo && this.token); }
+      };
+
+      function showSync(status, msg) {
+        els.syncStatus.className = `sync-status show ${status}`;
+        els.syncStatus.textContent = msg;
+        setTimeout(() => els.syncStatus.classList.remove('show'), 4000);
       }
 
-      showSync('loading', '⏳ Публикация в GitHub...');
-      const apiUrl = `https://api.github.com/repos/${GH_CONFIG.owner}/${GH_CONFIG.repo}/contents/data.json?ref=${GH_CONFIG.branch}`;
-      const headers = { Authorization: `token ${GH_CONFIG.token}`, Accept: 'application/vnd.github.v3+json' };
-
-      try {
-        // 1. Получить текущий файл и его SHA
-        let sha = null, content = [];
-        try {
-          const res = await fetch(apiUrl, { headers });
-          if (res.ok) {
-            const file = await res.json();
-            sha = file.sha;
-            content = JSON.parse(atob(unescape(encodeURIComponent(file.content))));
-          }
-        } catch (e) { /* Файла нет, создадим новый */ }
-
-        // 2. Объединить данные (GitHub -> Local)
-        catalogData.forEach(localItem => {
-          const exists = content.find(c => c.id === localItem.id);
-          if (!exists) content.push(localItem);
-          else {
-            // Обновить отзывы, если есть
-            if (localItem.reviews?.length) exists.reviews = [...(exists.reviews||[]), ...localItem.reviews];
-          }
-        });
-
-        // 3. Закоммитить
-        const payload = {
-          message: `📝 Обновление каталога ${new Date().toLocaleString('ru-RU')}`,
-          content: btoa(unescape(encodeURIComponent(JSON.stringify(content, null, 2)))),
-          branch: GH_CONFIG.branch
-        };
-        if (sha) payload.sha = sha;
-
-        const commitRes = await fetch(apiUrl, { method: 'PUT', headers, body: JSON.stringify(payload) });
-        if (!commitRes.ok) {
-          const err = await commitRes.json();
-          if (err.message?.includes('sha')) return syncToGitHub(); // Retry on conflict
-          throw new Error(err.message || 'Ошибка коммита');
+      // Форматирование телефона
+      function formatPhone(val) {
+        let d = val.replace(/\D/g, '');
+        if (d.startsWith('8')) d = '7' + d.slice(1);
+        if (d.startsWith('7') && d.length > 11) d = d.slice(0, 11);
+        if (d.length === 10) d = '7' + d;
+        if (d.length === 11 && d.startsWith('7')) {
+          return `+7(${d.slice(1,4)})${d.slice(4,7)}-${d.slice(7,9)}-${d.slice(9)}`;
         }
-
-        showSync('success', '✅ Опубликовано в GitHub');
-        return true;
-      } catch (err) {
-        console.error(err);
-        showSync('error', '❌ Ошибка публикации');
-        return false;
+        return val;
       }
-    }
+      els.f_phone.addEventListener('blur', e => { e.target.value = formatPhone(e.target.value); });
 
-    // Data Loading
-    async function loadData() {
-      try {
-        const res = await fetch('data.json', { cache: 'no-store' });
-        if (res.ok) catalogData = await res.json();
-      } catch (e) { /* Fallback: empty */ }
-      renderAll();
-    }
+      function renderAll() {
+        renderStats(); renderRubrics(); renderCategories(); renderGrid();
+      }
 
-    function renderAll() { renderStats(); renderRubrics(); renderCategories(); renderGrid(); }
-    
-    function renderStats() {
-      document.getElementById('stats').innerHTML = `
-        <div class="stat"><div class="stat-num">${Object.keys(RUBRICS_CONFIG).length}</div><div class="stat-label">Рубрик</div></div>
-        <div class="stat"><div class="stat-num">${catalogData.length}</div><div class="stat-label">Контактов</div></div>
-      `;
-    }
+      function renderStats() {
+        els.stats.innerHTML = `<div class="stat"><div class="stat-num">${Object.keys(RUBRICS_CONFIG).length}</div><div class="stat-label">Рубрик</div></div><div class="stat"><div class="stat-num">${catalogData.length}</div><div class="stat-label">Контактов</div></div>`;
+      }
 
-    function renderRubrics() {
-      const c = document.getElementById('rubricTabs');
-      c.innerHTML = `<button class="tab-btn ${activeRubric==='Все'?'active':''}" onclick="setRubric('Все')">🏠 Все</button>`;
-      Object.keys(RUBRICS_CONFIG).forEach(r => c.innerHTML += `<button class="tab-btn ${activeRubric===r?'active':''}" onclick="setRubric('${r}')">${getRubricIcon(r)} ${r}</button>`);
-    }
-    function getRubricIcon(r) { return {'Бытовые услуги':'🔧','Строительство':'🏗️','Еда и рестораны':'🍽️','Магазины и доставки':'🛒','Отдых и развлечения':'🎉','Мероприятия в посёлке':'🎪','Медицина и аптеки':'🏥','Животные и защита от насекомых':'🐾'}[r]||'📋'; }
-    function setRubric(r) { activeRubric = r; activeCategory = 'Все'; renderAll(); }
-    function setCategory(c) { activeCategory = c; renderCategories(); renderGrid(); }
-    function renderCategories() {
-      const c = document.getElementById('subcatPills');
-      if (activeRubric === 'Все') { c.innerHTML = '<span style="color:var(--text-light); font-size:0.85rem;">Выберите рубрику для фильтрации</span>'; return; }
-      c.innerHTML = ['Все', ...RUBRICS_CONFIG[activeRubric]].map(cat => `<button class="pill ${activeCategory===cat?'active':''}" onclick="setCategory('${cat}')">${cat}</button>`).join('');
-    }
+      function renderRubrics() {
+        els.rubricTabs.innerHTML = '';
+        const btnAll = document.createElement('button'); btnAll.className = `tab-btn ${activeRubric==='Все'?'active':''}`; btnAll.textContent = '🏠 Все'; btnAll.onclick = () => setRubric('Все'); els.rubricTabs.appendChild(btnAll);
+        Object.keys(RUBRICS_CONFIG).forEach(r => {
+          const btn = document.createElement('button'); btn.className = `tab-btn ${activeRubric===r?'active':''}`; btn.textContent = `${getRubricIcon(r)} ${r}`; btn.onclick = () => setRubric(r); els.rubricTabs.appendChild(btn);
+        });
+      }
 
-    function calcRating(reviews) { if (!reviews?.length) return { avg: 0, count: 0 }; const s = reviews.reduce((a,r)=>a+r.rating,0); return { avg:(s/reviews.length).toFixed(1), count:reviews.length }; }
-    function applyFilters() { searchQuery = document.getElementById('searchInput').value.toLowerCase(); renderGrid(); }
-    document.getElementById('searchInput').addEventListener('input', applyFilters);
+      function getRubricIcon(r) { return {'Бытовые услуги':'🔧','Строительство':'🏗️','Еда и рестораны':'🍽️','Магазины и доставки':'🛒','Отдых и развлечения':'🎉','Мероприятия в посёлке':'🎪','Медицина и аптеки':'🏥','Животные и защита от насекомых':'🐾'}[r]||'📋'; }
+      function setRubric(r) { activeRubric = r; activeCategory = 'Все'; renderAll(); }
+      function setCategory(c) { activeCategory = c; renderCategories(); renderGrid(); }
+      function renderCategories() {
+        els.subcatPills.innerHTML = '';
+        if (activeRubric === 'Все') { els.subcatPills.innerHTML = '<span style="color:var(--text-light); font-size:0.85rem;">Выберите рубрику для фильтрации</span>'; return; }
+        const cats = ['Все', ...RUBRICS_CONFIG[activeRubric]];
+        cats.forEach(cat => { const pill = document.createElement('button'); pill.className = `pill ${activeCategory===cat?'active':''}`; pill.textContent = cat; pill.onclick = () => setCategory(cat); els.subcatPills.appendChild(pill); });
+      }
 
-    function renderGrid() {
-      const filtered = catalogData.filter(item => {
-        const mR = activeRubric === 'Все' || item.rubric === activeRubric;
-        const mC = activeCategory === 'Все' || item.category === activeCategory;
-        const mS = !searchQuery || `${item.name} ${item.company} ${item.phone} ${item.desc}`.toLowerCase().includes(searchQuery);
-        return mR && mC && mS;
-      });
-      const grid = document.getElementById('grid');
-      if (!filtered.length) { grid.innerHTML = `<div class="empty"><span>🔍</span><h3>Ничего не найдено</h3><p>Измените параметры поиска</p></div>`; return; }
-      
-      grid.innerHTML = filtered.map(item => {
-        const { avg, count } = calcRating(item.reviews);
-        const stars = avg > 0 ? '★'.repeat(Math.round(avg)) + '☆'.repeat(5-Math.round(avg)) : '☆☆☆☆☆';
-        const phones = item.phone ? item.phone.split(',').map(p=>p.trim()).map(p=>`<a href="tel:${p.replace(/\D/g,'')}" class="phone-btn">📞 ${p}</a>`).join(' ') : '';
-        const web = item.web ? `<a href="${item.web}" target="_blank" class="site-link">🌐 Перейти</a>` : '';
-        return `
-          <div class="card">
+      function calcRating(reviews) { if (!reviews?.length) return { avg: 0, count: 0 }; const s = reviews.reduce((a,r)=>a+r.rating,0); return { avg:(s/reviews.length).toFixed(1), count:reviews.length }; }
+
+      function renderGrid() {
+        els.grid.innerHTML = '';
+        const filtered = catalogData.filter(item => {
+          const mR = activeRubric === 'Все' || item.rubric === activeRubric;
+          const mC = activeCategory === 'Все' || item.category === activeCategory;
+          const mS = !searchQuery || `${item.name} ${item.company} ${item.phone} ${item.desc}`.toLowerCase().includes(searchQuery);
+          return mR && mC && mS;
+        });
+        if (!filtered.length) { els.grid.innerHTML = `<div class="empty"><span>🔍</span><h3>Ничего не найдено</h3><p>Измените параметры поиска</p></div>`; return; }
+        const frag = document.createDocumentFragment();
+        filtered.forEach(item => {
+          const { avg, count } = calcRating(item.reviews);
+          const stars = avg > 0 ? '★'.repeat(Math.round(avg)) + '☆'.repeat(5-Math.round(avg)) : '☆☆☆☆☆';
+          const card = document.createElement('div'); card.className = 'card';
+          let phonesHtml = '';
+          if(item.phone) item.phone.split(',').map(p=>p.trim()).forEach(p=>{ phonesHtml += `<a href="tel:${p.replace(/\D/g,'')}" class="phone-btn">📞 ${p}</a> `; });
+          const webHtml = item.web ? `<a href="${item.web}" target="_blank" class="site-link">🌐 Перейти</a>` : '';
+          card.innerHTML = `
             <div class="card-header"><div><div class="card-title">${item.name}</div><div class="card-company">${item.company||''}</div></div><span class="badge">${item.rubric}</span></div>
             <div class="rating-row"><span class="stars">${stars}</span><span class="rating-count">${avg>0?avg:'—'} (${count})</span></div>
-            ${phones}<span class="tag">📌 ${item.category}</span>
-            ${item.desc?`<div class="card-desc">${item.desc}</div>`:''}${item.price?`<div class="card-price">💰 ${item.price}</div>`:''}${web?`<div style="margin-top:0.5rem">${web}</div>`:''}
-            <div class="card-footer"><span>👤 ${item.author||'Житель'}</span><button class="review-btn" onclick="openReviewModal(${item.id})">✍️ Оставить отзыв</button></div>
-          </div>`;
-      }).join('');
-    }
+            ${phonesHtml}<span class="tag">📌 ${item.category}</span>
+            ${item.desc?`<div class="card-desc">${item.desc}</div>`:''}${item.price?`<div class="card-price">💰 ${item.price}</div>`:''}${webHtml?`<div style="margin-top:0.5rem">${webHtml}</div>`:''}
+            <div class="card-footer"><span>👤 ${item.author||'Житель'}</span><button class="review-btn" data-id="${item.id}">✍️ Оставить отзыв</button></div>`;
+          frag.appendChild(card);
+        });
+        els.grid.appendChild(frag);
+        document.querySelectorAll('.review-btn').forEach(btn => btn.onclick = () => openReviewModal(parseInt(btn.dataset.id)));
+      }
 
-    // Modals & Forms
-    const addModal = document.getElementById('addModal');
-    document.getElementById('openAddModal').onclick = () => { addModal.classList.add('open'); updateFormCategories(); };
-    document.getElementById('closeAddModal').onclick = document.getElementById('cancelForm').onclick = () => addModal.classList.remove('open');
-    addModal.addEventListener('click', e => { if(e.target===addModal) addModal.classList.remove('open'); });
-
-    function setupForm() {
-      const sel = document.getElementById('f_rubric');
-      sel.innerHTML = `<option value="">Выберите рубрику</option>` + Object.keys(RUBRICS_CONFIG).map(r=>`<option value="${r}">${r}</option>`).join('');
-      sel.addEventListener('change', updateFormCategories);
-
-      document.getElementById('addForm').onsubmit = async e => {
-        e.preventDefault();
-        const newItem = { id: Date.now(), rubric: document.getElementById('f_rubric').value, category: document.getElementById('f_cat').value.trim(), name: document.getElementById('f_name').value.trim(), company: document.getElementById('f_company').value.trim(), phone: document.getElementById('f_phone').value.trim(), desc: document.getElementById('f_desc').value.trim(), price: document.getElementById('f_price').value.trim(), web: document.getElementById('f_web').value.trim(), author: document.getElementById('f_author').value.trim(), reviews: [] };
-        if(!RUBRICS_CONFIG[newItem.rubric]?.includes(newItem.category)) RUBRICS_CONFIG[newItem.rubric].push(newItem.category);
-        catalogData.unshift(newItem);
-        renderAll(); addModal.classList.remove('open'); e.target.reset();
-        await syncToGitHub();
+      function openModal(m) { m.classList.add('open'); }
+      function closeModal(m) { m.classList.remove('open'); }
+      els.openAddModal.onclick = () => { updateFormLists(); openModal(els.addModal); };
+      els.closeAddModal.onclick = () => closeModal(els.addModal);
+      els.cancelForm.onclick = () => closeModal(els.addModal);
+      els.addModal.addEventListener('click', e => { if(e.target===els.addModal) closeModal(els.addModal); });
+      els.closeReviewModal.onclick = () => closeModal(els.reviewModal);
+      els.cancelReviewModal.onclick = () => closeModal(els.reviewModal);
+      els.reviewModal.addEventListener('click', e => { if(e.target===els.reviewModal) closeModal(els.reviewModal); });
+      els.openGithubConfig.onclick = () => {
+        document.getElementById('gh_owner').value = GH_CONFIG.owner; document.getElementById('gh_repo').value = GH_CONFIG.repo;
+        document.getElementById('gh_branch').value = GH_CONFIG.branch; document.getElementById('gh_token').value = GH_CONFIG.token;
+        openModal(els.githubConfigModal);
       };
-    }
-    setupForm();
-    function updateFormCategories() { const r = document.getElementById('f_rubric').value; document.getElementById('catList').innerHTML = r && RUBRICS_CONFIG[r] ? RUBRICS_CONFIG[r].map(c=>`<option value="${c}">`).join('') : ''; }
+      els.closeGithubConfig.onclick = () => closeModal(els.githubConfigModal);
+      els.cancelGithubConfig.onclick = () => closeModal(els.githubConfigModal);
+      els.githubConfigModal.addEventListener('click', e => { if(e.target===els.githubConfigModal) closeModal(els.githubConfigModal); });
 
-    const reviewModal = document.getElementById('reviewModal');
-    function openReviewModal(id) { document.getElementById('r_masterId').value = id; reviewModal.classList.add('open'); resetStars(); }
-    document.getElementById('closeReviewModal').onclick = document.getElementById('cancelReviewModal').onclick = () => reviewModal.classList.remove('open');
-    reviewModal.addEventListener('click', e => { if(e.target===reviewModal) reviewModal.classList.remove('open'); });
+      function updateFormLists() {
+        els.rubricList.innerHTML = '';
+        Object.keys(RUBRICS_CONFIG).forEach(r => { const o=document.createElement('option'); o.value=r; els.rubricList.appendChild(o); });
+        els.catList.innerHTML = '';
+        const sel = els.f_rubric.value.trim();
+        const cats = sel && RUBRICS_CONFIG[sel] ? RUBRICS_CONFIG[sel] : [...new Set(Object.values(RUBRICS_CONFIG).flat())];
+        cats.forEach(c => { const o=document.createElement('option'); o.value=c; els.catList.appendChild(o); });
+      }
+      els.f_rubric.oninput = updateFormLists;
 
-    const starPicker = document.getElementById('starPicker');
-    function resetStars() { document.getElementById('r_rating').value = 5; starPicker.querySelectorAll('span').forEach((s,i)=>s.classList.toggle('active', i<5)); }
-    starPicker.querySelectorAll('span').forEach(s => { s.onclick = () => { const v = parseInt(s.dataset.v); document.getElementById('r_rating').value = v; starPicker.querySelectorAll('span').forEach(st=>st.classList.toggle('active', parseInt(st.dataset.v)<=v)); }; });
+      els.addForm.onsubmit = async e => {
+        e.preventDefault();
+        const rVal = els.f_rubric.value.trim(), cVal = els.f_cat.value.trim();
+        if(!RUBRICS_CONFIG[rVal]) RUBRICS_CONFIG[rVal] = [];
+        if(!RUBRICS_CONFIG[rVal].includes(cVal)) RUBRICS_CONFIG[rVal].push(cVal);
+        localStorage.setItem('sv_rubrics_config', JSON.stringify(RUBRICS_CONFIG));
 
-    document.getElementById('reviewForm').onsubmit = async e => {
-      e.preventDefault();
-      const id = parseInt(document.getElementById('r_masterId').value);
-      const item = catalogData.find(i=>i.id===id); if(!item) return;
-      item.reviews = item.reviews||[];
-      item.reviews.unshift({ author: document.getElementById('r_author').value.trim(), rating: parseInt(document.getElementById('r_rating').value), text: document.getElementById('r_text').value.trim(), date: new Date().toLocaleDateString('ru-RU') });
-      renderAll(); reviewModal.classList.remove('open'); e.target.reset();
-      await syncToGitHub();
-    };
+        const newItem = {
+          id: Date.now(), rubric: rVal, category: cVal,
+          name: els.f_name.value.trim(), company: els.f_company.value.trim(),
+          phone: formatPhone(els.f_phone.value.trim()), desc: els.f_desc.value.trim(),
+          price: els.f_price.value.trim(), web: els.f_web.value.trim(),
+          author: els.f_author.value.trim(), reviews: []
+        };
+        catalogData.unshift(newItem); renderAll(); closeModal(els.addModal); els.addForm.reset();
+        showSync('loading', '⏳ Сохранение...'); await syncToGitHub();
+      };
 
-    // GitHub Config Modal
-    document.getElementById('openGithubConfig').onclick = () => {
-      document.getElementById('gh_owner').value = GH_CONFIG.owner;
-      document.getElementById('gh_repo').value = GH_CONFIG.repo;
-      document.getElementById('gh_branch').value = GH_CONFIG.branch;
-      document.getElementById('gh_token').value = GH_CONFIG.token;
-      document.getElementById('githubConfigModal').classList.add('open');
-    };
-    document.getElementById('closeGithubConfig').onclick = document.getElementById('cancelGithubConfig').onclick = () => document.getElementById('githubConfigModal').classList.remove('open');
-    document.getElementById('githubConfigForm').onsubmit = e => {
-      e.preventDefault();
-      GH_CONFIG.owner = document.getElementById('gh_owner').value.trim();
-      GH_CONFIG.repo = document.getElementById('gh_repo').value.trim();
-      GH_CONFIG.branch = document.getElementById('gh_branch').value.trim();
-      GH_CONFIG.token = document.getElementById('gh_token').value.trim();
-      document.getElementById('githubConfigModal').classList.remove('open');
-      showSync('success', '✅ Настройки сохранены');
-    };
+      function openReviewModal(id) { document.getElementById('r_masterId').value = id; resetStars(); openModal(els.reviewModal); }
+      function resetStars() { document.getElementById('r_rating').value = 5; els.starPicker.querySelectorAll('span').forEach(s=>s.classList.toggle('active', true)); }
+      els.starPicker.querySelectorAll('span').forEach(s => { s.onclick = () => { const v=parseInt(s.dataset.v); document.getElementById('r_rating').value=v; els.starPicker.querySelectorAll('span').forEach(st=>st.classList.toggle('active', parseInt(st.dataset.v)<=v)); }; });
 
-    document.addEventListener('keydown', e => { if(e.key==='Escape') { addModal.classList.remove('open'); reviewModal.classList.remove('open'); document.getElementById('githubConfigModal').classList.remove('open'); }});
-    loadData();
+      els.reviewForm.onsubmit = async e => {
+        e.preventDefault();
+        const id=parseInt(els.r_masterId.value), item=catalogData.find(i=>i.id===id); if(!item) return;
+        item.reviews=item.reviews||[];
+        item.reviews.unshift({ author:document.getElementById('r_author').value.trim(), rating:parseInt(document.getElementById('r_rating').value), text:document.getElementById('r_text').value.trim(), date:new Date().toLocaleDateString('ru-RU') });
+        renderAll(); closeModal(els.reviewModal); els.reviewForm.reset(); showSync('loading', '⏳ Публикация отзыва...'); await syncToGitHub();
+      };
+
+      els.githubConfigForm.onsubmit = e => {
+        e.preventDefault(); GH_CONFIG.owner=document.getElementById('gh_owner').value.trim(); GH_CONFIG.repo=document.getElementById('gh_repo').value.trim();
+        GH_CONFIG.branch=document.getElementById('gh_branch').value.trim(); GH_CONFIG.token=document.getElementById('gh_token').value.trim();
+        closeModal(els.githubConfigModal); showSync('success', '✅ Настройки GitHub сохранены');
+      };
+
+      els.searchBtn.onclick = () => { searchQuery=els.searchInput.value.toLowerCase(); renderGrid(); };
+      els.searchInput.oninput = () => { searchQuery=els.searchInput.value.toLowerCase(); renderGrid(); };
+      els.searchInput.onkeydown = e => { if(e.key==='Enter') { searchQuery=els.searchInput.value.toLowerCase(); renderGrid(); }};
+
+      async function syncToGitHub() {
+        if(!GH_CONFIG.isReady) { showSync('error', '❌ GitHub не настроен'); return false; }
+        showSync('loading', '⏳ Публикация в GitHub...');
+        const url=`https://api.github.com/repos/${GH_CONFIG.owner}/${GH_CONFIG.repo}/contents/data.json?ref=${GH_CONFIG.branch}`;
+        const h={Authorization:`token ${GH_CONFIG.token}`, Accept:'application/vnd.github.v3+json'};
+        try {
+          let sha=null; try { const r=await fetch(url,{headers}); if(r.ok) { const f=await r.json(); sha=f.sha; } } catch(e){}
+          const p={message:`📝 Авто-обновление ${new Date().toLocaleString('ru-RU')}`, content:btoa(unescape(encodeURIComponent(JSON.stringify(catalogData,null,2)))), branch:GH_CONFIG.branch};
+          if(sha) p.sha=sha;
+          const cr=await fetch(url,{method:'PUT',headers,body:JSON.stringify(p)});
+          if(!cr.ok) { const er=await cr.json(); if(er.message?.includes('sha')) return syncToGitHub(); throw new Error(er.message); }
+          showSync('success', '✅ Опубликовано в GitHub'); return true;
+        } catch(e) { console.error(e); showSync('error', '❌ Ошибка синхронизации'); return false; }
+      }
+
+      async function loadDataFromGitHub() {
+        try {
+          const res = await fetch('data.json', { cache: 'no-store' });
+          if(res.ok) { const d=await res.json(); if(Array.isArray(d)&&d.length>0) { catalogData=d; renderAll(); } }
+        } catch(e){}
+      }
+
+      renderAll(); loadDataFromGitHub();
+    });
   </script>
 </body>
 </html>
