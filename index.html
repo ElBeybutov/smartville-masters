@@ -96,6 +96,12 @@
     footer { background: var(--primary); color: white; text-align: center; padding: 2rem 1rem; margin-top: 2rem; font-size: 0.9rem; }
     footer a { color: var(--accent); text-decoration: none; cursor: pointer; }
     
+    /* Стили для звезд */
+    .star-picker { display: flex; gap: 4px; font-size: 1.8rem; cursor: pointer; margin-top: 0.3rem; }
+    .star-picker span { color: #d0d0d0; transition: color 0.15s, transform 0.15s; }
+    .star-picker span.active { color: var(--star); }
+    .star-picker span:hover { transform: scale(1.15); }
+
     @media (max-width: 768px) {
       .hero h1 { font-size: 1.9rem; }
       .grid { grid-template-columns: 1fr; }
@@ -198,9 +204,9 @@
 
   <script>
     document.addEventListener('DOMContentLoaded', () => {
-      // Дефолтная конфигурация
+      // Дефолтная конфигурация рубрик
       const DEFAULT_RUBRICS = {
-        "Бытовые услуги": ["Водоочистка", "Сантехника", "Септики", "Электрика", "Окна и двери", "Котлы и газ", "Бытовая техника", "Вентиляция и дымоходы", "Вывоз мусора", "Уборка и водители"],
+        "Бытовые услуги": ["Водоочистка", "Сантехника", "Септики", "Электрика", "Окна и двери", "Котлы и газ", "Бытовая техника", "Вентиляция и дымоходы", "Вывоз мусора", "Уборка и водители", "Строительные работы"],
         "Строительство": ["Строительство домов", "Вывоз мусора", "Благоустройство и плитка", "Сыпучие материалы", "Колодцы и скважины", "Лестницы", "Плотницкие работы"],
         "Еда и рестораны": ["Рестораны и кафе", "Доставка пиццы", "Суши и роллы", "Фермерские продукты", "Онлайн-конструкторы"],
         "Магазины и доставки": ["Рыба и морепродукты", "Праздничное оформление"],
@@ -213,67 +219,83 @@
       // Загрузка конфига из localStorage или использование дефолта
       let RUBRICS_CONFIG = JSON.parse(localStorage.getItem('sv_rubrics_config')) || JSON.parse(JSON.stringify(DEFAULT_RUBRICS));
 
+      // Исходные данные из CSV
       const FALLBACK_DATA = [
-        {id:1,rubric:"Бытовые услуги",category:"Водоочистка",name:"Водоочистка (фильтры, настройка)",company:"Алексей",phone:"89262805485",desc:"Замена фильтров, диагностика",price:"2500 - 3000 ₽",author:"4/13 Алексей",web:"",reviews:[]},
-        {id:2,rubric:"Бытовые услуги",category:"Сантехника",name:"Сантехник",company:"Илья",phone:"89031538521",desc:"Показался компетентным",price:"",author:"4/13 Алексей",web:"",reviews:[]},
-        {id:3,rubric:"Бытовые услуги",category:"Септики",name:"Обслуживание септиков",company:"Александр",phone:"8-925-927-00-79",desc:"Хороший специалист, приезжает в назначенное время",price:"4500 ₽",author:"4/13 Алексей",web:"",reviews:[]},
-        {id:4,rubric:"Бытовые услуги",category:"Септики",name:"Обслуживание септиков",company:"",phone:"79771130924",desc:"",price:"5000 ₽",author:"",web:"",reviews:[]},
-        {id:5,rubric:"Бытовые услуги",category:"Септики",name:"Обслуживание септиков",company:"Владимир",phone:"79268101131",desc:"",price:"4500-5000 ₽",author:"",web:"",reviews:[]},
-        {id:6,rubric:"Бытовые услуги",category:"Септики",name:"Обслуживание септиков",company:"Александр",phone:"7 925 347-80-10",desc:"",price:"",author:"",web:"",reviews:[]},
-        {id:7,rubric:"Бытовые услуги",category:"Уборка и водители",name:"Частный водитель",company:"",phone:"8 (916) 999-39-19",desc:"",price:"",author:"4/13 Алексей",web:"",reviews:[]},
-        {id:8,rubric:"Бытовые услуги",category:"Уборка и водители",name:"Уборщица",company:"Светлана",phone:"7 (962) 982-89-54",desc:"",price:"",author:"",web:"",reviews:[]},
-        {id:9,rubric:"Бытовые услуги",category:"Электрика",name:"Электрик",company:"Николай",phone:"79037993176",desc:"",price:"",author:"",web:"",reviews:[]},
-        {id:10,rubric:"Бытовые услуги",category:"Окна и двери",name:"Оконщик",company:"Андрей",phone:"+7 926 393-07-55",desc:"Сложные случаи, работает как частник, исполнительный",price:"",author:"",web:"",reviews:[]},
-        {id:11,rubric:"Бытовые услуги",category:"Окна и двери",name:"Установка дверей",company:"Виталий",phone:"79296251691",desc:"",price:"1500 ₽ — выезд",author:"Мария",web:"",reviews:[]},
-        {id:12,rubric:"Бытовые услуги",category:"Окна и двери",name:"Установка дверей",company:"Юрий",phone:"89646461842, 89603068844",desc:"",price:"",author:"",web:"",reviews:[]},
-        {id:13,rubric:"Бытовые услуги",category:"Окна и двери",name:"Окна",company:"Николай",phone:"79035804104",desc:"",price:"",author:"от Дениса",web:"",reviews:[]},
-        {id:14,rubric:"Бытовые услуги",category:"Вывоз мусора",name:"Вывоз мусора",company:"Ирина",phone:"89096981909",desc:"",price:"",author:"",web:"",reviews:[]},
-        {id:15,rubric:"Бытовые услуги",category:"Котлы и газ",name:"Обслуживание котлов",company:"Александр",phone:"9959193598",desc:"Сертифицированный специалист по газовому оборудованию, официальный договор с Мособлгаз. Дешевле, делает на совесть.",price:"",author:"Наталья",web:"",reviews:[]},
-        {id:16,rubric:"Бытовые услуги",category:"Котлы и газ",name:"Обслуживание котлов",company:"Андрей",phone:"89261290121",desc:"Рекомендуют",price:"",author:"Марина",web:"",reviews:[]},
-        {id:17,rubric:"Бытовые услуги",category:"Котлы и газ",name:"Обслуживание котлов",company:"Сергей (МосОблГаз)",phone:"7 905 128-17-59, 7 919 999-03-09",desc:"",price:"",author:"Алексей С.",web:"",reviews:[]},
-        {id:18,rubric:"Бытовые услуги",category:"Бытовая техника",name:"Ремонт стиральных машин",company:"Александр Bosh",phone:"89166433047",desc:"",price:"",author:"",web:"",reviews:[]},
-        {id:19,rubric:"Бытовые услуги",category:"Вентиляция и дымоходы",name:"Вентиляция и дымоходы",company:"Евгений",phone:"7 903 012-97-93",desc:"",price:"",author:"",web:"",reviews:[]},
-        {id:20,rubric:"Бытовые услуги",category:"Строительные работы",name:"Строительные работы, сантехника",company:"Сергей",phone:"89031709338",desc:"Грамотные ребята, адекватные цены",price:"",author:"",web:"",reviews:[]},
-        {id:21,rubric:"Строительство",category:"Строительство домов",name:"Строительство домов",company:"Владимир",phone:"89035685784",desc:"Опытный, без креатива",price:"Дешевле рынка частников",author:"4/13 Алексей",web:"",reviews:[]},
-        {id:22,rubric:"Строительство",category:"Вывоз мусора",name:"Вывоз строительного мусора",company:"Ирина",phone:"89096981909",desc:"Не подводили со сроками",price:"8000 ₽ / 8 м³",author:"4/13 Алексей",web:"",reviews:[]},
-        {id:23,rubric:"Строительство",category:"Вывоз мусора",name:"Вывоз мусора — Дмитров",company:"",phone:"8496224109",desc:"",price:"",author:"Вера",web:"",reviews:[]},
-        {id:24,rubric:"Строительство",category:"Благоустройство и плитка",name:"Тротуарная плитка, земляные работы",company:"Батюшково",phone:"89263445712",desc:"",price:"",author:"4/13 Алексей",web:"",reviews:[]},
-        {id:25,rubric:"Строительство",category:"Сыпучие материалы",name:"Песок, земля, щебень",company:"Батюшково",phone:"89858206588",desc:"",price:"Песок: 5 м³ — 4000 ₽, 8 м³ — 5000 ₽",author:"4/13 Алексей",web:"",reviews:[]},
-        {id:26,rubric:"Строительство",category:"Колодцы и скважины",name:"Колодцы — копка, ремонт",company:"Рафаэль",phone:"89670854222",desc:"Контакт старый",price:"",author:"",web:"",reviews:[]},
-        {id:27,rubric:"Строительство",category:"Колодцы и скважины",name:"Колодцы, вода",company:"Сергей",phone:"89067396945",desc:"Контакт старый",price:"",author:"",web:"",reviews:[]},
-        {id:28,rubric:"Строительство",category:"Лестницы",name:"Лестницы",company:"Василий",phone:"79999948998",desc:"",price:"",author:"",web:"",reviews:[]},
-        {id:29,rubric:"Строительство",category:"Лестницы",name:"Лестницы",company:"Дмитрий",phone:"79168011607",desc:"",price:"",author:"",web:"",reviews:[]},
-        {id:30,rubric:"Строительство",category:"Лестницы",name:"Лестницы",company:"Алексей",phone:"79252627220",desc:"",price:"",author:"",web:"",reviews:[]},
-        {id:31,rubric:"Строительство",category:"Плотницкие работы",name:"Плотник",company:"Сергей",phone:"79851811931",desc:"",price:"",author:"",web:"",reviews:[]},
-        {id:32,rubric:"Еда и рестораны",category:"Рестораны и кафе",name:"Ресторан в X-LAND",company:"XLand",phone:"89031420916",desc:"Меню кафе в Инстаграм: @La__Moroz",price:"200-300 ₽",author:"4/13 Александра",web:"",reviews:[]},
-        {id:33,rubric:"Еда и рестораны",category:"Рестораны и кафе",name:"Ресторан Бисквит (Дмитров)",company:"",phone:"7(925)146-06-83",desc:"Вкусная еда. Доставка ~1.5-2 часа",price:"Ср. чек 1500 ₽",author:"4/13 Алексей",web:"https://restoran-dmitrov.ru/",reviews:[]},
-        {id:34,rubric:"Еда и рестораны",category:"Доставка пиццы",name:"Доставка пиццы",company:"",phone:"84951503859",desc:"Хорошее меню, вкусные блюда",price:"",author:"Алексей",web:"https://oscocafe.ru/",reviews:[]},
-        {id:35,rubric:"Еда и рестораны",category:"Суши и роллы",name:"Суши Барракуда (Дмитров)",company:"",phone:"7916-501-11-77",desc:"Суши, роллы, пицца, супы",price:"",author:"",web:"https://sushi-dmitrov.ru/",reviews:[]},
-        {id:36,rubric:"Еда и рестораны",category:"Доставка пиццы",name:"Доставка пиццы",company:"Yandex Go",phone:"",desc:"Пицца Д'миро — недорогая, бесплатная доставка в посёлок",price:"",author:"",web:"",reviews:[]},
-        {id:37,rubric:"Еда и рестораны",category:"Рестораны и кафе",name:"Доставка еды",company:"",phone:"89258988898, 84951888898",desc:"",price:"",author:"Ксения",web:"http://мясонауглях.рус/",reviews:[]},
+        // Бытовуха
+        {id:1,rubric:"Бытовые услуги",category:"Водоочистка",name:"Водоочистка (фильтры, настройка)",company:"Алексей",phone:"+7(926)280-54-85",desc:"Замена фильтров, диагностика",price:"2500 - 3000 ₽",author:"4/13 Алексей",web:"",reviews:[]},
+        {id:2,rubric:"Бытовые услуги",category:"Сантехника",name:"Сантехник",company:"Илья",phone:"+7(903)153-85-21",desc:"Показался компетентным",price:"",author:"4/13 Алексей",web:"",reviews:[]},
+        {id:3,rubric:"Бытовые услуги",category:"Септики",name:"Обслуживание септиков",company:"Александр",phone:"+7(925)927-00-79",desc:"Хороший специалист, приезжает в назначенное время",price:"4500 ₽",author:"4/13 Алексей",web:"",reviews:[]},
+        {id:4,rubric:"Бытовые услуги",category:"Септики",name:"Обслуживание септиков",company:"",phone:"+7(977)113-09-24",desc:"",price:"5000 ₽",author:"",web:"",reviews:[]},
+        {id:5,rubric:"Бытовые услуги",category:"Септики",name:"Обслуживание септиков",company:"Владимир",phone:"+7(926)810-11-31",desc:"",price:"4500-5000 ₽",author:"",web:"",reviews:[]},
+        {id:6,rubric:"Бытовые услуги",category:"Септики",name:"Обслуживание септиков",company:"Александр",phone:"+7(925)347-80-10",desc:"",price:"",author:"",web:"",reviews:[]},
+        {id:7,rubric:"Бытовые услуги",category:"Уборка и водители",name:"Частный водитель",company:"",phone:"+7(916)999-39-19",desc:"",price:"",author:"4/13 Алексей",web:"",reviews:[]},
+        {id:8,rubric:"Бытовые услуги",category:"Уборка и водители",name:"Уборщица",company:"Светлана",phone:"+7(962)982-89-54",desc:"",price:"",author:"",web:"",reviews:[]},
+        {id:9,rubric:"Бытовые услуги",category:"Электрика",name:"Электрик",company:"Николай",phone:"+7(903)799-31-76",desc:"",price:"",author:"",web:"",reviews:[]},
+        {id:10,rubric:"Бытовые услуги",category:"Окна и двери",name:"Оконщик",company:"Андрей",phone:"+7(926)393-07-55",desc:"Сложные случаи, работает как частник, исполнительный",price:"",author:"",web:"",reviews:[]},
+        {id:11,rubric:"Бытовые услуги",category:"Окна и двери",name:"Установка дверей",company:"Виталий",phone:"+7(929)625-16-91",desc:"",price:"1500 ₽ — выезд",author:"Мария",web:"",reviews:[]},
+        {id:12,rubric:"Бытовые услуги",category:"Окна и двери",name:"Установка дверей",company:"Юрий",phone:"+7(964)646-18-42, +7(960)306-88-44",desc:"",price:"",author:"",web:"",reviews:[]},
+        {id:13,rubric:"Бытовые услуги",category:"Окна и двери",name:"Окна",company:"Николай",phone:"+7(903)580-41-04",desc:"",price:"",author:"от Дениса",web:"",reviews:[]},
+        {id:14,rubric:"Бытовые услуги",category:"Вывоз мусора",name:"Вывоз мусора",company:"Ирина",phone:"+7(909)698-19-09",desc:"",price:"",author:"",web:"",reviews:[]},
+        {id:15,rubric:"Бытовые услуги",category:"Котлы и газ",name:"Обслуживание котлов",company:"Александр",phone:"+7(995)919-35-98",desc:"Сертифицированный специалист по газовому оборудованию, официальный договор с Мособлгаз. Дешевле, делает на совесть.",price:"",author:"Наталья",web:"",reviews:[]},
+        {id:16,rubric:"Бытовые услуги",category:"Котлы и газ",name:"Обслуживание котлов",company:"Андрей",phone:"+7(926)129-01-21",desc:"Рекомендуют",price:"",author:"Марина",web:"",reviews:[]},
+        {id:17,rubric:"Бытовые услуги",category:"Котлы и газ",name:"Обслуживание котлов",company:"Сергей (МосОблГаз)",phone:"+7(905)128-17-59, +7(919)999-03-09",desc:"",price:"",author:"Алексей С.",web:"",reviews:[]},
+        {id:18,rubric:"Бытовые услуги",category:"Бытовая техника",name:"Ремонт стиральных машин",company:"Александр Bosh",phone:"+7(916)643-30-47",desc:"",price:"",author:"",web:"",reviews:[]},
+        {id:19,rubric:"Бытовые услуги",category:"Вентиляция и дымоходы",name:"Вентиляция и дымоходы",company:"Евгений",phone:"+7(903)012-97-93",desc:"",price:"",author:"",web:"",reviews:[]},
+        {id:20,rubric:"Бытовые услуги",category:"Строительные работы",name:"Строительные работы, сантехника",company:"Сергей",phone:"+7(903)170-93-38",desc:"Грамотные ребята, адекватные цены",price:"",author:"",web:"",reviews:[]},
+        
+        // Строительство
+        {id:21,rubric:"Строительство",category:"Строительство домов",name:"Строительство домов",company:"Владимир",phone:"+7(903)568-57-84",desc:"Опытный, без креатива",price:"Дешевле рынка частников",author:"4/13 Алексей",web:"",reviews:[]},
+        {id:22,rubric:"Строительство",category:"Вывоз мусора",name:"Вывоз строительного мусора",company:"Ирина",phone:"+7(909)698-19-09",desc:"Не подводили со сроками",price:"8000 ₽ / 8 м³",author:"4/13 Алексей",web:"",reviews:[]},
+        {id:23,rubric:"Строительство",category:"Вывоз мусора",name:"Вывоз мусора — Дмитров",company:"",phone:"+7(496)224-10-09",desc:"",price:"",author:"Вера",web:"",reviews:[]},
+        {id:24,rubric:"Строительство",category:"Благоустройство и плитка",name:"Тротуарная плитка, земляные работы",company:"Батюшково",phone:"+7(926)344-57-12",desc:"",price:"",author:"4/13 Алексей",web:"",reviews:[]},
+        {id:25,rubric:"Строительство",category:"Сыпучие материалы",name:"Песок, земля, щебень",company:"Батюшково",phone:"+7(985)820-65-88",desc:"",price:"Песок: 5 м³ — 4000 ₽, 8 м³ — 5000 ₽",author:"4/13 Алексей",web:"",reviews:[]},
+        {id:26,rubric:"Строительство",category:"Колодцы и скважины",name:"Колодцы — копка, ремонт",company:"Рафаэль",phone:"+7(967)085-42-22",desc:"Контакт старый",price:"",author:"",web:"",reviews:[]},
+        {id:27,rubric:"Строительство",category:"Колодцы и скважины",name:"Колодцы, вода",company:"Сергей",phone:"+7(906)739-69-45",desc:"Контакт старый",price:"",author:"",web:"",reviews:[]},
+        {id:28,rubric:"Строительство",category:"Лестницы",name:"Лестницы",company:"Василий",phone:"+7(999)994-89-98",desc:"",price:"",author:"",web:"",reviews:[]},
+        {id:29,rubric:"Строительство",category:"Лестницы",name:"Лестницы",company:"Дмитрий",phone:"+7(916)801-16-07",desc:"",price:"",author:"",web:"",reviews:[]},
+        {id:30,rubric:"Строительство",category:"Лестницы",name:"Лестницы",company:"Алексей",phone:"+7(925)262-72-20",desc:"",price:"",author:"",web:"",reviews:[]},
+        {id:31,rubric:"Строительство",category:"Плотницкие работы",name:"Плотник",company:"Сергей",phone:"+7(985)181-19-31",desc:"",price:"",author:"",web:"",reviews:[]},
+
+        // Еда и рестораны
+        {id:32,rubric:"Еда и рестораны",category:"Рестораны и кафе",name:"Ресторан в X-LAND",company:"XLand",phone:"+7(903)142-09-16",desc:"Меню кафе в Инстаграм: @La__Moroz",price:"200-300 ₽",author:"4/13 Александра",web:"",reviews:[]},
+        {id:33,rubric:"Еда и рестораны",category:"Рестораны и кафе",name:"Ресторан Бисквит (Дмитров)",company:"",phone:"+7(925)146-06-83",desc:"Вкусная еда. Доставка ~1.5-2 часа",price:"Ср. чек 1500 ₽",author:"4/13 Алексей",web:"https://restoran-dmitrov.ru/",reviews:[]},
+        {id:34,rubric:"Еда и рестораны",category:"Доставка пиццы",name:"Доставка пиццы",company:"",phone:"+7(495)150-38-59",desc:"Хорошее меню, вкусные блюда",price:"",author:"Алексей",web:"https://oscocafe.ru/",reviews:[]},
+        {id:35,rubric:"Еда и рестораны",category:"Суши и роллы",name:"Суши Барракуда (Дмитров)",company:"",phone:"+7(916)501-11-77",desc:"Суши, роллы, пицца, супы",price:"",author:"",web:"https://sushi-dmitrov.ru/",reviews:[]},
+        {id:36,rubric:"Еда и рестораны",category:"Доставка пиццы",name:"Доставка пиццы",company:"Через приложение Yandex Go (раздел еда)",phone:"",desc:"Пицца Д'миро — недорогая, бесплатная доставка в посёлок",price:"",author:"",web:"",reviews:[]},
+        {id:37,rubric:"Еда и рестораны",category:"Рестораны и кафе",name:"Доставка еды",company:"",phone:"+7(925)898-88-98, +7(495)188-88-98",desc:"",price:"",author:"Ксения",web:"http://мясонауглях.рус/",reviews:[]},
         {id:38,rubric:"Еда и рестораны",category:"Онлайн-конструкторы",name:"Пицца",company:"",phone:"",desc:"Конструктор пиццы онлайн",price:"",author:"",web:"http://dmiro.azurewebsites.net",reviews:[]},
-        {id:39,rubric:"Еда и рестораны",category:"Фермерские продукты",name:"Мясные фермерские продукты",company:"Колистратов Дмитрий",phone:"79032387062",desc:"@kolistratovdmitrii. Оксана рекомендует",price:"",author:"",web:"",reviews:[]},
+        {id:39,rubric:"Еда и рестораны",category:"Фермерские продукты",name:"Мясные фермерские продукты",company:"Колистратов Дмитрий",phone:"+7(903)238-70-62",desc:"@kolistratovdmitrii. Оксана рекомендует",price:"",author:"",web:"",reviews:[]},
+
+        // Магазины
         {id:40,rubric:"Магазины и доставки",category:"Рыба и морепродукты",name:"Доставка рыбы",company:"Fishorder.ru",phone:"",desc:"",price:"",author:"",web:"",reviews:[]},
-        {id:41,rubric:"Магазины и доставки",category:"Праздничное оформление",name:"Шарики для оформления",company:"Ирина",phone:"8 (909) 955-33-28",desc:"Instagram: @vozdushnaya_radost_dm",price:"",author:"Татьяна",web:"https://instagram.com/vozdushnaya_radost_dm",reviews:[]},
-        {id:42,rubric:"Отдых и развлечения",category:"Базы отдыха и отели",name:"Свежий ветер (Дом отдыха)",company:"",phone:"8(800)-707-11-90",desc:"",price:"8000 ₽ / сутки",author:"",web:"https://sv-spa-hotel.ru/",reviews:[]},
+        {id:41,rubric:"Магазины и доставки",category:"Праздничное оформление",name:"Шарики для оформления",company:"Ирина",phone:"+7(909)955-33-28",desc:"Instagram: @vozdushnaya_radost_dm",price:"",author:"Татьяна",web:"https://instagram.com/vozdushnaya_radost_dm",reviews:[]},
+
+        // Отдых
+        {id:42,rubric:"Отдых и развлечения",category:"Базы отдыха и отели",name:"Свежий ветер (Дом отдыха)",company:"",phone:"+7(800)707-11-90",desc:"",price:"8000 ₽ / сутки",author:"",web:"https://sv-spa-hotel.ru/",reviews:[]},
         {id:43,rubric:"Отдых и развлечения",category:"Активный отдых",name:"Страусиная ферма",company:"",phone:"",desc:"Яйца можно купить, но не всегда бывают",price:"",author:"",web:"https://strauslend.ru/",reviews:[]},
-        {id:44,rubric:"Отдых и развлечения",category:"Базы отдыха и отели",name:"Боярская усадьба (Дом отдыха)",company:"",phone:"7 495 661-88-53",desc:"",price:"",author:"",web:"https://www.boyarskoe.com/",reviews:[]},
-        {id:45,rubric:"Отдых и развлечения",category:"Базы отдыха и отели",name:"Усадьба Батюшково",company:"",phone:"7 (925) 518-6282",desc:"Большой дом с бассейном, подходит для мероприятий",price:"от 10000 ₽ / сутки",author:"",web:"https://www.ecoclub-resort.ru/",reviews:[]},
-        {id:46,rubric:"Отдых и развлечения",category:"Базы отдыха и отели",name:"Алирико (отель, ресторан)",company:"",phone:"7 (926) 534-43-79",desc:"",price:"от 2000 ₽ / сутки",author:"",web:"https://aliriko.ru/",reviews:[]},
-        {id:47,rubric:"Отдых и развлечения",category:"Активный отдых",name:"Боулинг в X-Land",company:"",phone:"7(495) 649-50-02",desc:"Лучше заказывать заранее",price:"950 ₽ / час",author:"",web:"http://xlandpark.ru/",reviews:[]},
-        {id:48,rubric:"Отдых и развлечения",category:"Детские праздники и квесты",name:"Детские праздники и корпоративы",company:"Алексей — клуб Патриот",phone:"89646404343",desc:"Лазертаг, пейнтбол, квесты, форт Баярд",price:"",author:"",web:"https://patriotdmitrov.ru/",reviews:[]},
-        {id:49,rubric:"Мероприятия в посёлке",category:"Детские занятия",name:"Занятие для детей",company:"Анна",phone:"7 916 127-81-99",desc:"Предоставление террасы на участке 11/24",price:"",author:"4/13 Алексей",web:"",reviews:[]},
-        {id:50,rubric:"Мероприятия в посёлке",category:"Кондитерские и торты",name:"Выпечка вкусных десертов",company:"Ксения",phone:"7 926 701-47-62",desc:"Капкейки, Кенди-бар",price:"",author:"4/13 Алексей",web:"http://tapasmarbella.ru/",reviews:[]},
-        {id:51,rubric:"Мероприятия в посёлке",category:"Флористика и декор",name:"Флористика, композиции из цветов",company:"Мария",phone:"7 925 706-26-49",desc:"",price:"",author:"Ксения",web:"",reviews:[]},
-        {id:52,rubric:"Медицина и аптеки",category:"Аптеки и доставка",name:"Аптека доставка",company:"Superapteka.ru",phone:"",desc:"Онлайн-заказ лекарств с доставкой",price:"",author:"",web:"https://superapteka.ru",reviews:[]},
-        {id:53,rubric:"Медицина и аптеки",category:"Врачи и педиатры",name:"Врач-педиатр",company:"Мария Геннадьевна",phone:"89031370001",desc:"Выезжает на дом",price:"",author:"",web:"",reviews:[]},
-        {id:54,rubric:"Медицина и аптеки",category:"Экстренная помощь",name:"Подмосковный номер по Ковид",company:"",phone:"88005505030",desc:"Присылают врача, нужен только полис",price:"",author:"",web:"",reviews:[]},
-        {id:55,rubric:"Животные и защита от насекомых",category:"Груминг",name:"Стрижка собак",company:"Ирина",phone:"89163860065",desc:"Приезжает в посёлок, стрижёт быстро и качественно. Очень приятный мастер.",price:"1500-2000 ₽",author:"4/13 Александра",web:"",reviews:[]},
-        {id:56,rubric:"Животные и защита от насекомых",category:"Ветклиники и врачи",name:"Ветклиника Дмитров",company:"",phone:"74997077680",desc:"",price:"",author:"",web:"",reviews:[]},
-        {id:57,rubric:"Животные и защита от насекомых",category:"Ветклиники и врачи",name:"Ветеринар",company:"",phone:"79104084706",desc:"",price:"",author:"",web:"",reviews:[]},
-        {id:58,rubric:"Животные и защита от насекомых",category:"Ветклиники и врачи",name:"Ветклиника в Икше",company:"ВетБиоПро",phone:"74955186291",desc:"",price:"",author:"",web:"",reviews:[]},
-        {id:59,rubric:"Животные и защита от насекомых",category:"Ветклиники и врачи",name:"Ветврач Икша (выезд)",company:"Наталья",phone:"79035296814",desc:"Выезд на дом",price:"",author:"",web:"",reviews:[]},
-        {id:60,rubric:"Животные и защита от насекомых",category:"Обработка от клещей",name:"Обработка участка от клещей",company:"GardenReview",phone:"79167844122",desc:"Профессиональная дезинсекция",price:"500 ₽ / сотка",author:"",web:"http://gardenreview.ru/",reviews:[]}
+        {id:44,rubric:"Отдых и развлечения",category:"Базы отдыха и отели",name:"Боярская усадьба (Дом отдыха)",company:"",phone:"+7(495)661-88-53",desc:"",price:"",author:"",web:"https://www.boyarskoe.com/",reviews:[]},
+        {id:45,rubric:"Отдых и развлечения",category:"Базы отдыха и отели",name:"Усадьба Батюшково",company:"",phone:"+7(925)518-62-82",desc:"Большой дом с бассейном, подходит для мероприятий",price:"от 10000 ₽ / сутки",author:"",web:"https://www.ecoclub-resort.ru/",reviews:[]},
+        {id:46,rubric:"Отдых и развлечения",category:"Базы отдыха и отели",name:"Алирико (отель, ресторан)",company:"",phone:"+7(926)534-43-79",desc:"",price:"от 2000 ₽ / сутки",author:"",web:"https://aliriko.ru/",reviews:[]},
+        {id:47,rubric:"Отдых и развлечения",category:"Активный отдых",name:"Боулинг в X-Land",company:"",phone:"+7(495)649-50-02",desc:"Лучше заказывать заранее",price:"950 ₽ / час",author:"",web:"http://xlandpark.ru/",reviews:[]},
+        {id:48,rubric:"Отдых и развлечения",category:"Детские праздники и квесты",name:"Детские праздники и корпоративы",company:"Алексей — клуб Патриот",phone:"+7(964)640-43-43",desc:"Лазертаг, пейнтбол, квесты, форт Баярд",price:"",author:"",web:"https://patriotdmitrov.ru/",reviews:[]},
+
+        // Мероприятия
+        {id:49,rubric:"Мероприятия в посёлке",category:"Детские занятия",name:"Занятие для детей",company:"Анна",phone:"+7(916)127-81-99",desc:"Предоставление террасы на участке 11/24",price:"",author:"4/13 Алексей",web:"",reviews:[]},
+        {id:50,rubric:"Мероприятия в посёлке",category:"Кондитерские и торты",name:"Выпечка вкусных десертов",company:"Ксения",phone:"+7(926)701-47-62",desc:"Капкейки, Кенди-бар",price:"",author:"4/13 Алексей",web:"http://tapasmarbella.ru/",reviews:[]},
+        {id:51,rubric:"Мероприятия в посёлке",category:"Флористика и декор",name:"Флористика, создание композиций из цветов",company:"Мария",phone:"+7(925)706-26-49",desc:"",price:"",author:"Ксения",web:"",reviews:[]},
+
+        // Медицина
+        {id:52,rubric:"Медицина и аптеки",category:"Аптеки и доставка",name:"Аптека доставка",company:"",phone:"",desc:"Онлайн-заказ лекарств с доставкой",price:"",author:"",web:"https://superapteka.ru",reviews:[]},
+        {id:53,rubric:"Медицина и аптеки",category:"Врачи и педиатры",name:"Врач-педиатр",company:"Мария Геннадьевна",phone:"+7(903)137-00-01",desc:"Выезжает на дом",price:"",author:"",web:"",reviews:[]},
+        {id:54,rubric:"Медицина и аптеки",category:"Экстренная помощь",name:"Подмосковный номер по Ковид",company:"",phone:"+7(800)550-50-30",desc:"Присылают врача, нужен только полис",price:"",author:"",web:"",reviews:[]},
+
+        // Животные
+        {id:55,rubric:"Животные и защита от насекомых",category:"Груминг",name:"Стрижка собак",company:"Ирина",phone:"+7(916)386-00-65",desc:"Приезжает в посёлок, стрижёт быстро и качественно. Очень приятный мастер.",price:"1500-2000 ₽",author:"4/13 Александра",web:"",reviews:[]},
+        {id:56,rubric:"Животные и защита от насекомых",category:"Ветклиники и врачи",name:"Ветклиника Дмитров",company:"",phone:"+7(499)707-76-80",desc:"",price:"",author:"",web:"",reviews:[]},
+        {id:57,rubric:"Животные и защита от насекомых",category:"Ветклиники и врачи",name:"Ветеринар",company:"",phone:"+7(910)408-47-06",desc:"",price:"",author:"",web:"",reviews:[]},
+        {id:58,rubric:"Животные и защита от насекомых",category:"Ветклиники и врачи",name:"Ветклиника в Икше",company:"ВетБиоПро",phone:"+7(495)518-62-91",desc:"",price:"",author:"",web:"",reviews:[]},
+        {id:59,rubric:"Животные и защита от насекомых",category:"Ветклиники и врачи",name:"Ветврач Икша (выезд)",company:"Наталья",phone:"+7(903)529-68-14",desc:"Выезд на дом",price:"",author:"",web:"",reviews:[]},
+        {id:60,rubric:"Животные и защита от насекомых",category:"Обработка от клещей",name:"Обработка участка от клещей",company:"GardenReview",phone:"+7(916)784-41-22",desc:"Профессиональная дезинсекция",price:"500 ₽ / сотка",author:"",web:"http://gardenreview.ru/",reviews:[]}
       ];
 
       let catalogData = [...FALLBACK_DATA];
@@ -281,6 +303,7 @@
       let activeCategory = 'Все';
       let searchQuery = '';
 
+      // Элементы DOM
       const els = {
         stats: document.getElementById('stats'), rubricTabs: document.getElementById('rubricTabs'), subcatPills: document.getElementById('subcatPills'),
         grid: document.getElementById('grid'), searchInput: document.getElementById('searchInput'), searchBtn: document.getElementById('searchBtn'),
@@ -289,12 +312,13 @@
         addForm: document.getElementById('addForm'), f_rubric: document.getElementById('f_rubric'), f_cat: document.getElementById('f_cat'),
         rubricList: document.getElementById('rubricList'), catList: document.getElementById('catList'), f_phone: document.getElementById('f_phone'),
         reviewModal: document.getElementById('reviewModal'), closeReviewModal: document.getElementById('closeReviewModal'), cancelReviewModal: document.getElementById('cancelReviewModal'),
-        reviewForm: document.getElementById('reviewForm'), r_masterId: document.getElementById('r_masterId'), starPicker: document.getElementById('starPicker'),
+        reviewForm: document.getElementById('reviewForm'), r_masterId: document.getElementById('r_masterId'), starPicker: document.getElementById('starPicker'), ratingInput: document.getElementById('r_rating'),
         openGithubConfig: document.getElementById('openGithubConfig'), githubConfigModal: document.getElementById('githubConfigModal'),
         closeGithubConfig: document.getElementById('closeGithubConfig'), cancelGithubConfig: document.getElementById('cancelGithubConfig'),
         githubConfigForm: document.getElementById('githubConfigForm')
       };
 
+      // GitHub Config Storage
       const GH_CONFIG = {
         get owner() { return localStorage.getItem('gh_owner') || ''; },
         set owner(v) { localStorage.setItem('gh_owner', v); },
@@ -317,7 +341,6 @@
       function formatPhone(val) {
         let d = val.replace(/\D/g, '');
         if (d.startsWith('8')) d = '7' + d.slice(1);
-        if (d.startsWith('7') && d.length > 11) d = d.slice(0, 11);
         if (d.length === 10) d = '7' + d;
         if (d.length === 11 && d.startsWith('7')) {
           return `+7(${d.slice(1,4)})${d.slice(4,7)}-${d.slice(7,9)}-${d.slice(9)}`;
@@ -326,6 +349,7 @@
       }
       els.f_phone.addEventListener('blur', e => { e.target.value = formatPhone(e.target.value); });
 
+      // Рендеринг
       function renderAll() {
         renderStats(); renderRubrics(); renderCategories(); renderGrid();
       }
@@ -363,6 +387,7 @@
           return mR && mC && mS;
         });
         if (!filtered.length) { els.grid.innerHTML = `<div class="empty"><span>🔍</span><h3>Ничего не найдено</h3><p>Измените параметры поиска</p></div>`; return; }
+        
         const frag = document.createDocumentFragment();
         filtered.forEach(item => {
           const { avg, count } = calcRating(item.reviews);
@@ -383,15 +408,19 @@
         document.querySelectorAll('.review-btn').forEach(btn => btn.onclick = () => openReviewModal(parseInt(btn.dataset.id)));
       }
 
+      // Модальные окна
       function openModal(m) { m.classList.add('open'); }
       function closeModal(m) { m.classList.remove('open'); }
+
       els.openAddModal.onclick = () => { updateFormLists(); openModal(els.addModal); };
       els.closeAddModal.onclick = () => closeModal(els.addModal);
       els.cancelForm.onclick = () => closeModal(els.addModal);
       els.addModal.addEventListener('click', e => { if(e.target===els.addModal) closeModal(els.addModal); });
+
       els.closeReviewModal.onclick = () => closeModal(els.reviewModal);
       els.cancelReviewModal.onclick = () => closeModal(els.reviewModal);
       els.reviewModal.addEventListener('click', e => { if(e.target===els.reviewModal) closeModal(els.reviewModal); });
+
       els.openGithubConfig.onclick = () => {
         document.getElementById('gh_owner').value = GH_CONFIG.owner; document.getElementById('gh_repo').value = GH_CONFIG.repo;
         document.getElementById('gh_branch').value = GH_CONFIG.branch; document.getElementById('gh_token').value = GH_CONFIG.token;
@@ -401,6 +430,7 @@
       els.cancelGithubConfig.onclick = () => closeModal(els.githubConfigModal);
       els.githubConfigModal.addEventListener('click', e => { if(e.target===els.githubConfigModal) closeModal(els.githubConfigModal); });
 
+      // Обновление списков в форме
       function updateFormLists() {
         els.rubricList.innerHTML = '';
         Object.keys(RUBRICS_CONFIG).forEach(r => { const o=document.createElement('option'); o.value=r; els.rubricList.appendChild(o); });
@@ -411,6 +441,7 @@
       }
       els.f_rubric.oninput = updateFormLists;
 
+      // Форма добавления контакта
       els.addForm.onsubmit = async e => {
         e.preventDefault();
         const rVal = els.f_rubric.value.trim(), cVal = els.f_cat.value.trim();
@@ -429,30 +460,47 @@
         showSync('loading', '⏳ Сохранение...'); await syncToGitHub();
       };
 
-      function openReviewModal(id) { document.getElementById('r_masterId').value = id; resetStars(); openModal(els.reviewModal); }
-      function resetStars() { document.getElementById('r_rating').value = 5; els.starPicker.querySelectorAll('span').forEach(s=>s.classList.toggle('active', true)); }
-      els.starPicker.querySelectorAll('span').forEach(s => { s.onclick = () => { const v=parseInt(s.dataset.v); document.getElementById('r_rating').value=v; els.starPicker.querySelectorAll('span').forEach(st=>st.classList.toggle('active', parseInt(st.dataset.v)<=v)); }; });
+      // Отзывы и Звёзды
+      function updateStarsUI(val) {
+        els.starPicker.querySelectorAll('span').forEach(st => 
+          st.classList.toggle('active', parseInt(st.dataset.v) <= val)
+        );
+      }
+      
+      els.starPicker.querySelectorAll('span').forEach(star => {
+        star.addEventListener('mouseenter', () => updateStarsUI(parseInt(star.dataset.v)));
+        star.addEventListener('mouseleave', () => updateStarsUI(parseInt(els.ratingInput.value) || 0));
+        star.addEventListener('click', () => {
+          els.ratingInput.value = parseInt(star.dataset.v);
+          updateStarsUI(parseInt(els.ratingInput.value));
+        });
+      });
+
+      function openReviewModal(id) { document.getElementById('r_masterId').value = id; els.ratingInput.value = 5; updateStarsUI(5); openModal(els.reviewModal); }
 
       els.reviewForm.onsubmit = async e => {
         e.preventDefault();
-        const id=parseInt(els.r_masterId.value), item=catalogData.find(i=>i.id===id); if(!item) return;
+        const id=parseInt(document.getElementById('r_masterId').value), item=catalogData.find(i=>i.id===id); if(!item) return;
         item.reviews=item.reviews||[];
-        item.reviews.unshift({ author:document.getElementById('r_author').value.trim(), rating:parseInt(document.getElementById('r_rating').value), text:document.getElementById('r_text').value.trim(), date:new Date().toLocaleDateString('ru-RU') });
+        item.reviews.unshift({ author:document.getElementById('r_author').value.trim(), rating:parseInt(els.ratingInput.value), text:document.getElementById('r_text').value.trim(), date:new Date().toLocaleDateString('ru-RU') });
         renderAll(); closeModal(els.reviewModal); els.reviewForm.reset(); showSync('loading', '⏳ Публикация отзыва...'); await syncToGitHub();
       };
 
+      // Форма настроек GitHub
       els.githubConfigForm.onsubmit = e => {
         e.preventDefault(); GH_CONFIG.owner=document.getElementById('gh_owner').value.trim(); GH_CONFIG.repo=document.getElementById('gh_repo').value.trim();
         GH_CONFIG.branch=document.getElementById('gh_branch').value.trim(); GH_CONFIG.token=document.getElementById('gh_token').value.trim();
         closeModal(els.githubConfigModal); showSync('success', '✅ Настройки GitHub сохранены');
       };
 
+      // Поиск
       els.searchBtn.onclick = () => { searchQuery=els.searchInput.value.toLowerCase(); renderGrid(); };
       els.searchInput.oninput = () => { searchQuery=els.searchInput.value.toLowerCase(); renderGrid(); };
       els.searchInput.onkeydown = e => { if(e.key==='Enter') { searchQuery=els.searchInput.value.toLowerCase(); renderGrid(); }};
 
+      // GitHub Sync
       async function syncToGitHub() {
-        if(!GH_CONFIG.isReady) { showSync('error', '❌ GitHub не настроен'); return false; }
+        if(!GH_CONFIG.isReady) { showSync('error', '❌ GitHub не настроен (кликните ⚙️)'); return false; }
         showSync('loading', '⏳ Публикация в GitHub...');
         const url=`https://api.github.com/repos/${GH_CONFIG.owner}/${GH_CONFIG.repo}/contents/data.json?ref=${GH_CONFIG.branch}`;
         const h={Authorization:`token ${GH_CONFIG.token}`, Accept:'application/vnd.github.v3+json'};
