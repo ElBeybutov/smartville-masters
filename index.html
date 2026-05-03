@@ -3,340 +3,664 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Мастера SmartVille</title>
+  <title>SmartVille — Каталог услуг посёлка</title>
+  <link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@400;500;600;700&family=Open+Sans:wght@400;600&display=swap" rel="stylesheet">
   <style>
     :root {
-      --bg: #f8fafc; --card: #ffffff; --text: #0f172a; --muted: #64748b;
-      --primary: #2563eb; --primary-hover: #1d4ed8; --accent: #10b981;
-      --border: #e2e8f0; --radius: 12px; --shadow: 0 4px 12px rgba(0,0,0,0.06);
-      --star: #f59e0b;
+      --primary: #2d5a3d;
+      --primary-light: #4a7c59;
+      --secondary: #d4a574;
+      --accent: #e8b86d;
+      --bg: #f5f1e8;
+      --card: #ffffff;
+      --text: #2c3e2d;
+      --text-light: #6b7b6e;
+      --border: #e0d5c1;
+      --shadow: 0 4px 20px rgba(45, 90, 61, 0.08);
+      --shadow-hover: 0 8px 30px rgba(45, 90, 61, 0.15);
+      --radius: 16px;
     }
+
     * { box-sizing: border-box; margin: 0; padding: 0; }
-    body { font-family: system-ui, -apple-system, sans-serif; background: var(--bg); color: var(--text); line-height: 1.5; padding: 1rem; }
     
-    header { text-align: center; margin-bottom: 2rem; }
-    header h1 { font-size: 2rem; margin-bottom: 0.2rem; background: linear-gradient(135deg, #2563eb, #7c3aed); -webkit-background-clip: text; -webkit-text-fill-color: transparent; }
-    header p { color: var(--muted); font-size: 0.95rem; }
-
-    .controls { display: flex; flex-direction: column; gap: 0.8rem; max-width: 900px; margin: 0 auto 1.5rem; }
-    .search-box { position: relative; }
-    .search-box input { width: 100%; padding: 0.9rem 1rem 0.9rem 2.8rem; border: 2px solid var(--border); border-radius: var(--radius); font-size: 1rem; outline: none; transition: border 0.2s; }
-    .search-box input:focus { border-color: var(--primary); }
-    .search-box::before { content: "🔍"; position: absolute; left: 1rem; top: 50%; transform: translateY(-50%); opacity: 0.5; }
-
-    .categories { display: flex; gap: 0.5rem; flex-wrap: wrap; justify-content: center; }
-    .cat-btn { padding: 0.5rem 1rem; border: 1px solid var(--border); background: var(--card); border-radius: 20px; cursor: pointer; font-size: 0.9rem; transition: all 0.2s; }
-    .cat-btn:hover, .cat-btn.active { background: var(--primary); color: white; border-color: var(--primary); }
-
-    .actions { display: flex; gap: 0.6rem; justify-content: center; flex-wrap: wrap; margin-top: 0.5rem; }
-    .btn { padding: 0.7rem 1.2rem; border: none; border-radius: var(--radius); font-size: 0.9rem; cursor: pointer; font-weight: 500; transition: 0.2s; display: inline-flex; align-items: center; gap: 0.4rem; }
-    .btn-primary { background: var(--primary); color: white; }
-    .btn-primary:hover { background: var(--primary-hover); }
-    .btn-secondary { background: #e2e8f0; color: var(--text); }
-    .btn-secondary:hover { background: #cbd5e1; }
-    .btn-success { background: var(--accent); color: white; }
-    .btn-success:hover { background: #059669; }
-
-    .grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(300px, 1fr)); gap: 1.2rem; max-width: 950px; margin: 0 auto; }
-    .card { background: var(--card); padding: 1.3rem; border-radius: var(--radius); box-shadow: var(--shadow); border: 1px solid var(--border); position: relative; transition: transform 0.2s, box-shadow 0.2s; }
-    .card:hover { transform: translateY(-2px); box-shadow: 0 6px 16px rgba(0,0,0,0.1); }
-    
-    .card-header { display: flex; justify-content: space-between; align-items: start; margin-bottom: 0.5rem; gap: 0.5rem; }
-    .card h3 { font-size: 1.15rem; margin-bottom: 0.2rem; }
-    .tag { font-size: 0.7rem; padding: 0.2rem 0.6rem; border-radius: 12px; background: #dbeafe; color: #1e40af; font-weight: 600; white-space: nowrap; }
-    
-    .rating-row { display: flex; align-items: center; gap: 0.5rem; margin: 0.3rem 0 0.5rem; }
-    .stars { color: var(--star); letter-spacing: 1px; }
-    .rating-count { color: var(--muted); font-size: 0.8rem; }
-    
-    .phone { color: var(--primary); text-decoration: none; font-weight: 600; display: block; margin: 0.3rem 0 0.6rem; font-size: 1.05rem; }
-    .phone:hover { text-decoration: underline; }
-    .desc { color: var(--muted); font-size: 0.9rem; margin-bottom: 0.8rem; line-height: 1.4; }
-    
-    .meta { font-size: 0.75rem; color: #94a3b8; display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 0.5rem; margin-top: 0.5rem; padding-top: 0.5rem; border-top: 1px dashed var(--border); }
-    .review-btn { background: none; border: none; color: var(--primary); cursor: pointer; font-size: 0.8rem; padding: 0; font-weight: 500; }
-    .review-btn:hover { text-decoration: underline; }
-    
-    .delete-btn { position: absolute; top: 0.8rem; right: 0.8rem; background: none; border: none; cursor: pointer; font-size: 1.1rem; opacity: 0.3; transition: opacity 0.2s; }
-    .delete-btn:hover { opacity: 1; color: #ef4444; }
-
-    .empty { text-align: center; padding: 3rem 1rem; color: var(--muted); grid-column: 1 / -1; }
-    .empty span { font-size: 2.5rem; display: block; margin-bottom: 0.5rem; }
-
-    /* Modal */
-    .modal-overlay { position: fixed; inset: 0; background: rgba(0,0,0,0.4); display: none; align-items: center; justify-content: center; padding: 1rem; z-index: 100; backdrop-filter: blur(2px); }
-    .modal-overlay.open { display: flex; }
-    .modal { background: var(--card); padding: 1.5rem; border-radius: var(--radius); width: 100%; max-width: 450px; box-shadow: 0 10px 30px rgba(0,0,0,0.2); position: relative; max-height: 90vh; overflow-y: auto; }
-    .modal h2 { margin-bottom: 1rem; font-size: 1.3rem; }
-    .form-group { margin-bottom: 1rem; }
-    .form-group label { display: block; margin-bottom: 0.3rem; font-weight: 500; font-size: 0.9rem; }
-    .form-group input, .form-group select, .form-group textarea { width: 100%; padding: 0.7rem; border: 1px solid var(--border); border-radius: 8px; font-size: 0.95rem; outline: none; resize: vertical; font-family: inherit; }
-    .form-group textarea { min-height: 80px; }
-    .modal-actions { display: flex; gap: 0.8rem; justify-content: flex-end; margin-top: 0.5rem; }
-    .close-modal { position: absolute; top: 1rem; right: 1rem; background: none; border: none; font-size: 1.5rem; cursor: pointer; opacity: 0.5; }
-    
-    .star-picker { display: flex; gap: 5px; font-size: 1.5rem; cursor: pointer; margin-top: 0.3rem; }
-    .star-picker span { opacity: 0.3; transition: 0.2s; }
-    .star-picker span.active, .star-picker span:hover, .star-picker span:hover ~ span { opacity: 1; color: var(--star); }
-    .star-picker { flex-direction: row-reverse; justify-content: flex-end; }
-
-    @media (max-width: 600px) {
-      header h1 { font-size: 1.6rem; }
-      .grid { grid-template-columns: 1fr; }
-      .cat-btn { padding: 0.4rem 0.7rem; font-size: 0.8rem; }
-      .card { padding: 1.1rem; }
+    body {
+      font-family: 'Open Sans', sans-serif;
+      background: var(--bg);
+      color: var(--text);
+      line-height: 1.6;
+      background-image: 
+        radial-gradient(#d4a574 0.5px, transparent 0.5px),
+        radial-gradient(#d4a574 0.5px, var(--bg) 0.5px);
+      background-size: 20px 20px;
+      background-position: 0 0, 10px 10px;
     }
+
+    h1, h2, h3, h4 { font-family: 'Montserrat', sans-serif; }
+
+    /* Header */
+    .hero {
+      background: linear-gradient(135deg, var(--primary) 0%, var(--primary-light) 100%);
+      color: white;
+      padding: 3rem 1rem 4rem;
+      position: relative;
+      overflow: hidden;
+    }
+    
+    .hero::before {
+      content: '';
+      position: absolute;
+      top: 0; left: 0; right: 0; bottom: 0;
+      background: url("data:image/svg+xml,%3Csvg width='60' height='60' viewBox='0 0 60 60' xmlns='http://www.w3.org/2000/svg'%3E%3Cg fill='none' fill-rule='evenodd'%3E%3Cg fill='%23ffffff' fill-opacity='0.05'%3E%3Cpath d='M36 34v-4h-2v4h-4v2h4v4h2v-4h4v-2h-4zm0-30V0h-2v4h-4v2h4v4h2V6h4V4h-4zM6 34v-4H4v4H0v2h4v4h2v-4h4v-2H6zM6 4V0H4v4H0v2h4v4h2V6h4V4H6z'/%3E%3C/g%3E%3C/g%3E%3C/svg%3E");
+      opacity: 0.3;
+    }
+
+    .hero-content {
+      max-width: 900px;
+      margin: 0 auto;
+      text-align: center;
+      position: relative;
+      z-index: 1;
+    }
+
+    .hero h1 {
+      font-size: 2.8rem;
+      margin-bottom: 0.5rem;
+      font-weight: 700;
+      text-shadow: 2px 2px 4px rgba(0,0,0,0.1);
+    }
+
+    .hero p {
+      font-size: 1.2rem;
+      opacity: 0.95;
+      margin-bottom: 2rem;
+    }
+
+    /* Search */
+    .search-container {
+      max-width: 700px;
+      margin: -2rem auto 2rem;
+      padding: 0 1rem;
+      position: relative;
+      z-index: 10;
+    }
+
+    .search-box {
+      background: white;
+      border-radius: 50px;
+      padding: 0.5rem;
+      box-shadow: var(--shadow-hover);
+      display: flex;
+      align-items: center;
+      border: 2px solid var(--border);
+      transition: all 0.3s;
+    }
+
+    .search-box:focus-within {
+      border-color: var(--secondary);
+      transform: translateY(-2px);
+    }
+
+    .search-box input {
+      flex: 1;
+      border: none;
+      padding: 1rem 1.5rem;
+      font-size: 1rem;
+      outline: none;
+      background: transparent;
+      font-family: inherit;
+    }
+
+    .search-box button {
+      background: var(--secondary);
+      color: white;
+      border: none;
+      padding: 1rem 2rem;
+      border-radius: 50px;
+      cursor: pointer;
+      font-weight: 600;
+      transition: all 0.3s;
+      font-family: 'Montserrat', sans-serif;
+    }
+
+    .search-box button:hover {
+      background: var(--accent);
+      transform: scale(1.05);
+    }
+
+    /* Navigation */
+    .nav-container {
+      max-width: 1200px;
+      margin: 0 auto;
+      padding: 0 1rem 2rem;
+    }
+
+    .category-nav {
+      display: flex;
+      gap: 0.8rem;
+      flex-wrap: wrap;
+      justify-content: center;
+      margin-bottom: 2rem;
+    }
+
+    .nav-btn {
+      padding: 0.7rem 1.5rem;
+      border: 2px solid var(--border);
+      background: white;
+      border-radius: 50px;
+      cursor: pointer;
+      font-weight: 600;
+      transition: all 0.3s;
+      font-family: 'Montserrat', sans-serif;
+      font-size: 0.9rem;
+      display: flex;
+      align-items: center;
+      gap: 0.5rem;
+      box-shadow: var(--shadow);
+    }
+
+    .nav-btn:hover, .nav-btn.active {
+      background: var(--primary);
+      color: white;
+      border-color: var(--primary);
+      transform: translateY(-2px);
+      box-shadow: var(--shadow-hover);
+    }
+
+    /* Stats */
+    .stats {
+      display: flex;
+      gap: 1rem;
+      justify-content: center;
+      flex-wrap: wrap;
+      margin-bottom: 2rem;
+    }
+
+    .stat-card {
+      background: white;
+      padding: 1rem 2rem;
+      border-radius: var(--radius);
+      box-shadow: var(--shadow);
+      text-align: center;
+      min-width: 150px;
+    }
+
+    .stat-number {
+      font-size: 2rem;
+      font-weight: 700;
+      color: var(--primary);
+      font-family: 'Montserrat', sans-serif;
+    }
+
+    .stat-label {
+      font-size: 0.85rem;
+      color: var(--text-light);
+    }
+
+    /* Main Content */
+    .container {
+      max-width: 1200px;
+      margin: 0 auto;
+      padding: 0 1rem 3rem;
+    }
+
+    .section-title {
+      font-size: 1.8rem;
+      margin: 2rem 0 1.5rem;
+      color: var(--primary);
+      display: flex;
+      align-items: center;
+      gap: 0.8rem;
+      padding-bottom: 0.5rem;
+      border-bottom: 3px solid var(--secondary);
+    }
+
+    .grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(320px, 1fr));
+      gap: 1.5rem;
+    }
+
+    /* Cards */
+    .card {
+      background: var(--card);
+      border-radius: var(--radius);
+      padding: 1.5rem;
+      box-shadow: var(--shadow);
+      transition: all 0.3s;
+      border: 2px solid transparent;
+      position: relative;
+      overflow: hidden;
+    }
+
+    .card::before {
+      content: '';
+      position: absolute;
+      top: 0;
+      left: 0;
+      right: 0;
+      height: 4px;
+      background: linear-gradient(90deg, var(--primary), var(--secondary));
+    }
+
+    .card:hover {
+      transform: translateY(-5px);
+      box-shadow: var(--shadow-hover);
+      border-color: var(--border);
+    }
+
+    .card-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: start;
+      margin-bottom: 1rem;
+      gap: 1rem;
+    }
+
+    .card-title {
+      font-size: 1.2rem;
+      font-weight: 700;
+      color: var(--primary);
+      margin-bottom: 0.3rem;
+      font-family: 'Montserrat', sans-serif;
+    }
+
+    .card-company {
+      font-size: 0.9rem;
+      color: var(--text-light);
+      font-weight: 600;
+    }
+
+    .category-badge {
+      background: linear-gradient(135deg, var(--secondary), var(--accent));
+      color: white;
+      padding: 0.3rem 0.8rem;
+      border-radius: 20px;
+      font-size: 0.75rem;
+      font-weight: 600;
+      white-space: nowrap;
+      font-family: 'Montserrat', sans-serif;
+    }
+
+    .card-phone {
+      display: inline-flex;
+      align-items: center;
+      gap: 0.5rem;
+      background: var(--bg);
+      padding: 0.6rem 1rem;
+      border-radius: 8px;
+      color: var(--primary);
+      text-decoration: none;
+      font-weight: 600;
+      margin: 0.8rem 0;
+      transition: all 0.3s;
+      border: 2px solid var(--border);
+    }
+
+    .card-phone:hover {
+      background: var(--primary);
+      color: white;
+      transform: scale(1.02);
+    }
+
+    .card-desc {
+      color: var(--text-light);
+      font-size: 0.9rem;
+      line-height: 1.5;
+      margin: 0.8rem 0;
+    }
+
+    .card-price {
+      background: #f0e6d2;
+      padding: 0.5rem 0.8rem;
+      border-radius: 8px;
+      font-size: 0.85rem;
+      color: var(--primary);
+      font-weight: 600;
+      margin-top: 0.8rem;
+      display: inline-block;
+    }
+
+    .card-meta {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-top: 1rem;
+      padding-top: 1rem;
+      border-top: 1px dashed var(--border);
+      font-size: 0.8rem;
+      color: var(--text-light);
+    }
+
+    .card-author {
+      font-style: italic;
+    }
+
+    .empty-state {
+      text-align: center;
+      padding: 4rem 2rem;
+      grid-column: 1 / -1;
+    }
+
+    .empty-state span {
+      font-size: 4rem;
+      display: block;
+      margin-bottom: 1rem;
+      opacity: 0.5;
+    }
+
+    .empty-state h3 {
+      color: var(--primary);
+      margin-bottom: 0.5rem;
+    }
+
+    /* Footer */
+    footer {
+      background: var(--primary);
+      color: white;
+      text-align: center;
+      padding: 2rem;
+      margin-top: 3rem;
+    }
+
+    footer a {
+      color: var(--accent);
+      text-decoration: none;
+    }
+
+    /* Responsive */
+    @media (max-width: 768px) {
+      .hero h1 { font-size: 2rem; }
+      .grid { grid-template-columns: 1fr; }
+      .search-box { flex-direction: column; padding: 1rem; }
+      .search-box input { width: 100%; }
+      .search-box button { width: 100%; margin-top: 0.5rem; }
+      .category-nav { gap: 0.5rem; }
+      .nav-btn { padding: 0.6rem 1rem; font-size: 0.85rem; }
+    }
+
+    /* Animations */
+    @keyframes fadeIn {
+      from { opacity: 0; transform: translateY(20px); }
+      to { opacity: 1; transform: translateY(0); }
+    }
+
+    .card { animation: fadeIn 0.5s ease-out; }
   </style>
 </head>
 <body>
 
-  <header>
-    <h1>🛠 Мастера посёлка SmartVille</h1>
-    <p>Надёжные специалисты. Добавляйте, оценивайте, находите за секунды.</p>
+  <header class="hero">
+    <div class="hero-content">
+      <h1> SmartVille</h1>
+      <p>Каталог услуг и контактов нашего посёлка</p>
+    </div>
   </header>
 
-  <main>
-    <div class="controls">
-      <div class="search-box">
-        <input type="text" id="searchInput" placeholder="Поиск по имени, услуге или телефону...">
-      </div>
-      <div class="categories" id="catFilters"></div>
-      <div class="actions">
-        <button class="btn btn-primary" id="openMasterModal">+ Добавить мастера</button>
-        <button class="btn btn-secondary" id="fetchGitHub">🔄 Загрузить с GitHub</button>
-        <button class="btn btn-secondary" id="exportData">💾 Экспорт для GitHub</button>
-        <input type="file" id="importFile" accept=".json" hidden>
-        <button class="btn btn-secondary" id="importData">📥 Импорт JSON</button>
-      </div>
-    </div>
-
-    <div class="grid" id="mastersList"></div>
-  </main>
-
-  <!-- Modal: Добавить мастера -->
-  <div class="modal-overlay" id="masterModal">
-    <div class="modal">
-      <button class="close-modal" id="closeMasterModal">&times;</button>
-      <h2>Добавить специалиста</h2>
-      <form id="addMasterForm">
-        <div class="form-group"><label for="m_name">Имя / Название</label><input type="text" id="m_name" required placeholder="Иван Петров / Теплосервис"></div>
-        <div class="form-group"><label for="m_phone">Телефон</label><input type="tel" id="m_phone" required placeholder="+7 (999) 123-45-67"></div>
-        <div class="form-group">
-          <label for="m_cat">Категория</label>
-          <select id="m_cat" required>
-            <option value="Отопление">🔥 Отопление</option><option value="Электричество">💡 Электричество</option>
-            <option value="Газ">🔥 Газ</option><option value="Сантехника">🚿 Сантехника</option>
-            <option value="Кровля/Фасад">🏠 Кровля/Фасад</option><option value="Заборы/Ограждения">🚧 Заборы</option>
-            <option value="Другое">📦 Другое</option>
-          </select>
-        </div>
-        <div class="form-group"><label for="m_desc">Услуги / Описание</label><textarea id="m_desc" placeholder="Напр: Установка котлов, выезд в день обращения..."></textarea></div>
-        <div class="form-group"><label for="m_by">Кто добавил (имя жителя)</label><input type="text" id="m_by" required placeholder="Ваше имя"></div>
-        <div class="modal-actions">
-          <button type="button" class="btn btn-secondary" id="cancelMasterModal">Отмена</button>
-          <button type="submit" class="btn btn-primary">Сохранить</button>
-        </div>
-      </form>
+  <div class="search-container">
+    <div class="search-box">
+      <input type="text" id="searchInput" placeholder="🔍 Поиск по названию, услуге, телефону или имени...">
+      <button onclick="filterData()">Найти</button>
     </div>
   </div>
 
-  <!-- Modal: Оставить отзыв -->
-  <div class="modal-overlay" id="reviewModal">
-    <div class="modal">
-      <button class="close-modal" id="closeReviewModal">&times;</button>
-      <h2>Отзыв о мастере</h2>
-      <form id="addReviewForm">
-        <input type="hidden" id="r_masterId">
-        <div class="form-group"><label for="r_author">Ваше имя</label><input type="text" id="r_author" required placeholder="Алексей К."></div>
-        <div class="form-group"><label>Оценка</label><div class="star-picker" id="starPicker"><span data-v="1">★</span><span data-v="2">★</span><span data-v="3">★</span><span data-v="4">★</span><span data-v="5">★</span></div></div>
-        <input type="hidden" id="r_rating" value="5">
-        <div class="form-group"><label for="r_text">Отзыв</label><textarea id="r_text" placeholder="Что понравилось? Рекомендации?" required></textarea></div>
-        <div class="modal-actions">
-          <button type="button" class="btn btn-secondary" id="cancelReviewModal">Отмена</button>
-          <button type="submit" class="btn btn-success">Опубликовать отзыв</button>
-        </div>
-      </form>
-    </div>
+  <div class="nav-container">
+    <div class="stats" id="stats"></div>
+    
+    <div class="category-nav" id="categoryNav"></div>
   </div>
+
+  <main class="container" id="content"></main>
+
+  <footer>
+    <p>🌿 SmartVille — сообщество загородной жизни</p>
+    <p style="margin-top: 0.5rem; font-size: 0.9rem; opacity: 0.8;">
+      Данные обновляются жителями посёлка • 
+      <a href="#" onclick="exportData(); return false;">💾 Экспорт данных</a>
+    </p>
+  </footer>
 
   <script>
-    const STORAGE_KEY = 'smartville_masters_v2';
-    const DATA_URL = 'data.json'; // Для GitHub Pages
-    let masters = [];
-    let activeCategory = 'Все';
+    // Data from CSV files
+    const catalogData = [
+  {"category":"Бытовые услуги","name":"Водоочистка (фильтра, настройка)","company":"Алексей","phone":"89262805485","desc":"Замена фильтров, диагностика","price":"2500 - 3000 ₽","author":"4/13 Алексей"},
+  {"category":"Бытовые услуги","name":"Сантехник","company":"Илья","phone":"89031538521","desc":"Показался компетентным","price":"","author":"4/13 Алексей"},
+  {"category":"Бытовые услуги","name":"Обслуживание септиков","company":"Александр","phone":"8-925-927-00-79","desc":"Хороший специалист, приезжает в назначенное время","price":"4500 ₽","author":"4/13 Алексей"},
+  {"category":"Бытовые услуги","name":"Обслуживание септиков","company":"","phone":"79771130924","desc":"","price":"5000 ₽","author":""},
+  {"category":"Бытовые услуги","name":"Обслуживание септиков","company":"Владимир","phone":"79268101131","desc":"","price":"4500-5000 ₽","author":""},
+  {"category":"Бытовые услуги","name":"Обслуживание септиков","company":"Александр","phone":"7 925 347-80-10","desc":"","price":"","author":""},
+  {"category":"Бытовые услуги","name":"Частный водитель","company":"","phone":"8 (916) 999-39-19","desc":"","price":"","author":"4/13 Алексей"},
+  {"category":"Бытовые услуги","name":"Уборщица","company":"Светлана","phone":"7 (962) 982-89-54","desc":"","price":"","author":""},
+  {"category":"Бытовые услуги","name":"Электрик","company":"Николай","phone":"79037993176","desc":"","price":"","author":""},
+  {"category":"Бытовые услуги","name":"Оконщик","company":"Андрей","phone":"+7 926 393-07-55","desc":"Сложные случаи, работает как частник, исполнительный","price":"","author":""},
+  {"category":"Бытовые услуги","name":"Установка дверей","company":"Виталий","phone":"79296251691","desc":"","price":"1500 ₽ — выезд","author":"Мария"},
+  {"category":"Бытовые услуги","name":"Установка дверей","company":"Юрий","phone":"89646461842, 89603068844","desc":"","price":"","author":""},
+  {"category":"Бытовые услуги","name":"Окна","company":"Николай","phone":"79035804104","desc":"","price":"","author":"от Дениса"},
+  {"category":"Бытовые услуги","name":"Мусор Вывоз","company":"Ирина","phone":"89096981909","desc":"","price":"","author":""},
+  {"category":"Бытовые услуги","name":"Обслуживание котлов","company":"Александр","phone":"9959193598","desc":"Сертифицированный специалист по газовому оборудованию, официальный договор с Мособлгаз. Оперативно выручает.","price":"","author":"Наталья"},
+  {"category":"Бытовые услуги","name":"Обслуживание котлов","company":"Андрей","phone":"89261290121","desc":"Рекомендуют","price":"","author":"Марина"},
+  {"category":"Бытовые услуги","name":"Обслуживание котлов","company":"Сергей (МосОблГаз)","phone":"7 905 128-17-59, 7 919 999-03-09","desc":"","price":"","author":"Алексей С."},
+  {"category":"Бытовые услуги","name":"Ремонт стиральных машин","company":"Александр Bosh","phone":"89166433047","desc":"","price":"","author":""},
+  {"category":"Бытовые услуги","name":"Вентиляция Дымоходы","company":"Евгений","phone":"7 903 012-97-93","desc":"","price":"","author":""},
+  {"category":"Бытовые услуги","name":"Строительные работы, сантехника","company":"Сергей","phone":"89031709338","desc":"Грамотные ребята, адекватные цены","price":"","author":""},
+  
+  {"category":"Строительство","name":"Строительство домов","company":"Владимир","phone":"89035685784","desc":"Опытный, без креатива","price":"Дешевле рынка частников","author":"4/13 Алексей"},
+  {"category":"Строительство","name":"Вывоз строительного мусора","company":"Ирина","phone":"89096981909","desc":"Не подводили со сроками","price":"8000 ₽ / 8 м³","author":"4/13 Алексей"},
+  {"category":"Строительство","name":"Вывоз мусора — Дмитров","company":"","phone":"8496224109","desc":"","price":"","author":"Вера"},
+  {"category":"Строительство","name":"Тротуарная плитка, земляные работы","company":"Батюшково","phone":"89263445712","desc":"","price":"","author":"4/13 Алексей"},
+  {"category":"Строительство","name":"Песок, земля, щебень","company":"Батюшково","phone":"89858206588","desc":"","price":"Песок: 5 м³ — 4000 ₽, 8 м³ — 5000 ₽","author":"4/13 Алексей"},
+  {"category":"Строительство","name":"Колодцы — копка, ремонт","company":"Рафаэль","phone":"89670854222","desc":"Контакт старый","price":"","author":""},
+  {"category":"Строительство","name":"Колодцы, вода","company":"Сергей","phone":"89067396945","desc":"Контакт старый","price":"","author":""},
+  {"category":"Строительство","name":"Лестницы","company":"Василий","phone":"79999948998","desc":"","price":"","author":""},
+  {"category":"Строительство","name":"Лестницы","company":"Дмитрий","phone":"79168011607","desc":"","price":"","author":""},
+  {"category":"Строительство","name":"Лестницы","company":"Алексей","phone":"79252627220","desc":"","price":"","author":""},
+  {"category":"Строительство","name":"Плотник","company":"Сергей","phone":"79851811931","desc":"","price":"","author":""},
+  
+  {"category":"Еда и рестораны","name":"Ресторан в X-LAND","company":"XLand","phone":"89031420916","desc":"Меню кафе в Инстаграм: @La__Moroz","price":"200-300 ₽","author":"4/13 Александра"},
+  {"category":"Еда и рестораны","name":"Ресторан Бисквит (Дмитров)","company":"","phone":"7(925)146-06-83","desc":"Вкусная еда. Доставка ~1.5-2 часа","price":"Ср. чек 1500 ₽","author":"4/13 Алексей","website":"https://restoran-dmitrov.ru/"},
+  {"category":"Еда и рестораны","name":"Доставка пиццы","company":"","phone":"84951503859","desc":"Хорошее меню, вкусные блюда","price":"","author":"Алексей","website":"https://oscocafe.ru/"},
+  {"category":"Еда и рестораны","name":"Суши Барракуда (Дмитров)","company":"","phone":"7916-501-11-77","desc":"Суши, роллы, пицца, супы","price":"","author":"","website":"https://sushi-dmitrov.ru/"},
+  {"category":"Еда и рестораны","name":"Доставка пиццы","company":"Yandex Go","phone":"","desc":"Пицца Д'миро — недорогая, бесплатная доставка в посёлок","price":"","author":""},
+  {"category":"Еда и рестораны","name":"Доставка еды","company":"","phone":"89258988898, 84951888898","desc":"","price":"","author":"Ксения","website":"http://мясонауглях.рус/"},
+  {"category":"Еда и рестораны","name":"Пицца","company":"","phone":"","desc":"Конструктор пиццы онлайн","price":"","author":"","website":"http://dmiro.azurewebsites.net"},
+  {"category":"Еда и рестораны","name":"Мясные фермерские продукты","company":"Колистратов Дмитрий","phone":"79032387062","desc":"@kolistratovdmitrii. Оксана рекомендует","price":"","author":""},
+  
+  {"category":"Магазины и доставки","name":"Доставка рыбы","company":"Fishorder.ru","phone":"","desc":"","price":"","author":""},
+  {"category":"Магазины и доставки","name":"Шарики для оформления","company":"Ирина","phone":"8 (909) 955-33-28","desc":"Instagram: @vozdushnaya_radost_dm","price":"","author":"Татьяна"},
+  
+  {"category":"Отдых и развлечения","name":"Свежий ветер (Дом отдыха)","company":"","phone":"8(800)-707-11-90","desc":"","price":"8000 ₽ / сутки","author":"","website":"https://sv-spa-hotel.ru/"},
+  {"category":"Отдых и развлечения","name":"Страусиная ферма","company":"","phone":"","desc":"Яйца можно купить, но не всегда бывают","price":"","author":"","website":"https://strauslend.ru/"},
+  {"category":"Отдых и развлечения","name":"Боярская усадьба (Дом отдыха)","company":"","phone":"7 495 661-88-53","desc":"","price":"","author":"","website":"https://www.boyarskoe.com/"},
+  {"category":"Отдых и развлечения","name":"Усадьба Батюшково","company":"","phone":"7 (925) 518-6282","desc":"Большой дом с бассейном, подходит для мероприятий","price":"от 10000 ₽ / сутки","author":"","website":"https://www.ecoclub-resort.ru/"},
+  {"category":"Отдых и развлечения","name":"Алирико (отель, ресторан)","company":"","phone":"7 (926) 534-43-79","desc":"","price":"от 2000 ₽ / сутки","author":"","website":"https://aliriko.ru/"},
+  {"category":"Отдых и развлечения","name":"Боулинг в X-Land","company":"","phone":"7(495) 649-50-02","desc":"Лучше заказывать заранее","price":"950 ₽ / час","author":"","website":"http://xlandpark.ru/"},
+  {"category":"Отдых и развлечения","name":"Детские праздники и корпоративы","company":"Алексей — клуб Патриот","phone":"89646404343","desc":"Лазертаг, пейнтбол, квесты, форт Баярд","price":"","author":"","website":"https://patriotdmitrov.ru/"},
+  
+  {"category":"Мероприятия в посёлке","name":"Занятия для детей","company":"Анна","phone":"7 916 127-81-99","desc":"Предоставление террасы на участке 11/24","price":"","author":"4/13 Алексей"},
+  {"category":"Мероприятия в посёлке","name":"Выпечка десертов, торты","company":"Ксения","phone":"7 926 701-47-62","desc":"Капкейки, кенди-бар. Instagram: @tapasmarbella","price":"","author":"4/13 Алексей","website":"http://tapasmarbella.ru/"},
+  {"category":"Мероприятия в посёлке","name":"Флористика, композиции из цветов","company":"Мария","phone":"7 925 706-26-49","desc":"","price":"","author":"Ксения"},
+  
+  {"category":"Медицина и аптеки","name":"Аптека с доставкой","company":"Superapteka.ru","phone":"","desc":"Онлайн-заказ лекарств с доставкой","price":"","author":"","website":"https://superapteka.ru"},
+  {"category":"Медицина и аптеки","name":"Врач-педиатр","company":"Мария Геннадьевна","phone":"89031370001","desc":"Выезжает на дом","price":"","author":""},
+  {"category":"Медицина и аптеки","name":"Подмосковная служба по ковиду","company":"","phone":"88005505030","desc":"Присылают врача, нужен только полис","price":"","author":""},
+  
+  {"category":"Животные и защита от насекомых","name":"Стрижка собак (груминг)","company":"Ирина","phone":"89163860065","desc":"Приезжает в посёлок, стрижёт быстро и качественно. Очень приятный мастер.","price":"1500-2000 ₽","author":"4/13 Александра"},
+  {"category":"Животные и защита от насекомых","name":"Ветклиника Дмитров","company":"","phone":"74997077680","desc":"","price":"","author":""},
+  {"category":"Животные и защита от насекомых","name":"Частный ветеринар","company":"","phone":"79104084706","desc":"","price":"","author":""},
+  {"category":"Животные и защита от насекомых","name":"Ветклиника в Икше","company":"ВетБиоПро","phone":"74955186291","desc":"","price":"","author":""},
+  {"category":"Животные и защита от насекомых","name":"Ветврач Икша (выезд)","company":"Наталья","phone":"79035296814","desc":"Выезд на дом","price":"","author":""},
+  {"category":"Животные и защита от насекомых","name":"Обработка участка от клещей","company":"GardenReview","phone":"79167844122","desc":"Профессиональная дезинсекция","price":"500 ₽ / сотка","author":"","website":"http://gardenreview.ru/"}
+    ];
 
-    // --- Загрузка данных ---
-    async function loadData() {
-      try {
-        // Пытаемся загрузить с GitHub Pages / локального сервера
-        const res = await fetch(DATA_URL, { cache: 'no-store' });
-        if (res.ok) {
-          const data = await res.json();
-          if (Array.isArray(data)) {
-            masters = data;
-            localStorage.setItem(STORAGE_KEY, JSON.stringify(masters));
-            renderAll();
-            return;
-          }
-        }
-      } catch (e) { console.log('Offline/Local mode'); }
+    let currentCategory = 'Все';
+    let searchQuery = '';
+
+    // Initialize
+    function init() {
+      renderStats();
+      renderCategoryNav();
+      renderContent();
+    }
+
+    function renderStats() {
+      const categories = [...new Set(catalogData.map(item => item.category))];
+      const totalContacts = catalogData.length;
+      const withPhones = catalogData.filter(item => item.phone).length;
       
-      // Фоллбэк на localStorage
-      const stored = localStorage.getItem(STORAGE_KEY);
-      masters = stored ? JSON.parse(stored) : [];
-      if (masters.length === 0) initDemo();
-      renderAll();
+      document.getElementById('stats').innerHTML = `
+        <div class="stat-card">
+          <div class="stat-number">${categories.length}</div>
+          <div class="stat-label">Категорий</div>
+        </div>
+        <div class="stat-card">
+          <div class="stat-number">${totalContacts}</div>
+          <div class="stat-label">Контактов</div>
+        </div>
+        <div class="stat-card">
+          <div class="stat-number">${withPhones}</div>
+          <div class="stat-label">С телефонами</div>
+        </div>
+      `;
     }
 
-    function initDemo() {
-      masters = [
-        { id: 1715432100001, name: 'Алексей С.', phone: '+79991234567', category: 'Электричество', desc: 'Замена проводки, щитков, умный дом. Выезд в день обращения.', addedBy: 'Админ', date: '01.05.2026', reviews: [{author:'Ольга', rating:5, text:'Всё сделал быстро и аккуратно!', date:'03.05.2026'}] },
-        { id: 1715432100002, name: 'ГазСервис SmartVille', phone: '+79997654321', category: 'Газ', desc: 'Подключение, опломбировка, ремонт плит и котлов. Лицензия.', addedBy: 'Мария И.', date: '02.05.2026', reviews: [] }
-      ];
-      saveData();
-    }
-
-    function saveData() {
-      localStorage.setItem(STORAGE_KEY, JSON.stringify(masters));
-      renderAll();
-    }
-
-    // --- Рендер ---
-    function renderAll() {
-      renderCategories();
-      renderMasters();
-    }
-
-    function renderCategories() {
-      const cats = ['Все', ...new Set(masters.map(m => m.category))];
-      const container = document.getElementById('catFilters');
-      container.innerHTML = '';
-      cats.forEach(cat => {
-        const btn = document.createElement('button');
-        btn.className = `cat-btn ${cat === activeCategory ? 'active' : ''}`;
-        btn.textContent = cat;
-        btn.onclick = () => { activeCategory = cat; renderAll(); };
-        container.appendChild(btn);
-      });
-    }
-
-    function calcRating(reviews) {
-      if (!reviews || reviews.length === 0) return { avg: 0, count: 0 };
-      const sum = reviews.reduce((acc, r) => acc + r.rating, 0);
-      return { avg: (sum / reviews.length).toFixed(1), count: reviews.length };
-    }
-
-    function renderMasters() {
-      const list = document.getElementById('mastersList');
-      const query = document.getElementById('searchInput').value.toLowerCase();
+function renderCategoryNav() {
+  const categories = ['Все', ...new Set(catalogData.map(item => item.category))];
+  const icons = {
+    'Все': '🏠',
+    'Бытовые услуги': '🔧',
+    'Строительство': '🏗️',
+    'Еда и рестораны': '🍽️',
+    'Магазины и доставки': '🛒',
+    'Отдых и развлечения': '🎉',
+    'Мероприятия в посёлке': '🎪',
+    'Медицина и аптеки': '🏥',
+    'Животные и защита от насекомых': '🐾'
+  };
+  
+  const nav = document.getElementById('categoryNav');
+  nav.innerHTML = categories.map(cat => `
+    <button class="nav-btn ${cat === currentCategory ? 'active' : ''}" onclick="setCategory('${cat}')">
+      ${icons[cat] || '📋'} ${cat}
+    </button>
+  `).join('');
+}
       
-      const filtered = masters.filter(m => {
-        const matchesSearch = m.name.toLowerCase().includes(query) || m.desc.toLowerCase().includes(query) || m.category.toLowerCase().includes(query) || m.phone.includes(query);
-        return matchesSearch && (activeCategory === 'Все' || m.category === activeCategory);
+      const nav = document.getElementById('categoryNav');
+      nav.innerHTML = categories.map(cat => `
+        <button class="nav-btn ${cat === currentCategory ? 'active' : ''}" onclick="setCategory('${cat}')">
+          ${icons[cat] || '📋'} ${cat}
+        </button>
+      `).join('');
+    }
+
+    function setCategory(cat) {
+      currentCategory = cat;
+      renderCategoryNav();
+      renderContent();
+    }
+
+    function filterData() {
+      searchQuery = document.getElementById('searchInput').value.toLowerCase();
+      renderContent();
+    }
+
+    document.getElementById('searchInput').addEventListener('input', filterData);
+    document.getElementById('searchInput').addEventListener('keypress', (e) => {
+      if (e.key === 'Enter') filterData();
+    });
+
+    function renderContent() {
+      const filtered = catalogData.filter(item => {
+        const matchesCategory = currentCategory === 'Все' || item.category === currentCategory;
+        const matchesSearch = !searchQuery || 
+          item.name.toLowerCase().includes(searchQuery) ||
+          (item.company && item.company.toLowerCase().includes(searchQuery)) ||
+          (item.phone && item.phone.includes(searchQuery)) ||
+          (item.desc && item.desc.toLowerCase().includes(searchQuery));
+        return matchesCategory && matchesSearch;
       });
 
-      list.innerHTML = '';
+      const content = document.getElementById('content');
+      
       if (filtered.length === 0) {
-        list.innerHTML = `<div class="empty"><span>🔍</span>Мастера не найдены.<br>Добавьте первый контакт или проверьте фильтры.</div>`;
+        content.innerHTML = `
+          <div class="empty-state">
+            <span>🔍</span>
+            <h3>Ничего не найдено</h3>
+            <p>Попробуйте изменить параметры поиска или категорию</p>
+          </div>
+        `;
         return;
       }
 
-      filtered.forEach(m => {
-        const { avg, count } = calcRating(m.reviews);
-        const stars = avg > 0 ? '★'.repeat(Math.round(avg)) + '☆'.repeat(5 - Math.round(avg)) : '☆☆☆☆☆';
-        
-        const card = document.createElement('div');
-        card.className = 'card';
-        card.innerHTML = `
-          <button class="delete-btn" title="Удалить" onclick="deleteMaster(${m.id})">🗑</button>
-          <div class="card-header"><h3>${escapeHtml(m.name)}</h3><span class="tag">${m.category}</span></div>
-          <div class="rating-row"><span class="stars">${stars}</span><span class="rating-count">${avg > 0 ? avg : '—'} (${count})</span></div>
-          <a href="tel:${m.phone}" class="phone">📞 ${m.phone}</a>
-          <p class="desc">${escapeHtml(m.desc) || 'Без описания'}</p>
-          <div class="meta">
-            <span>Добавил: ${escapeHtml(m.addedBy)} • ${m.date}</span>
-            <button class="review-btn" onclick="openReviewModal(${m.id})">📝 Оставить отзыв</button>
-          </div>
-        `;
-        list.appendChild(card);
-      });
-    }
+      const grouped = filtered.reduce((acc, item) => {
+        if (!acc[item.category]) acc[item.category] = [];
+        acc[item.category].push(item);
+        return acc;
+      }, {});
 
-    // --- Модальные окна & Формы ---
-    function toggleModal(id, show) { document.getElementById(id).classList.toggle('open', show); }
-    document.getElementById('openMasterModal').onclick = () => toggleModal('masterModal', true);
-    document.getElementById('closeMasterModal').onclick = document.getElementById('cancelMasterModal').onclick = () => toggleModal('masterModal', false);
-    document.getElementById('closeReviewModal').onclick = document.getElementById('cancelReviewModal').onclick = () => toggleModal('reviewModal', false);
-    document.querySelectorAll('.modal-overlay').forEach(m => m.addEventListener('click', e => { if(e.target === m) m.classList.remove('open'); }));
-    document.addEventListener('keydown', e => { if(e.key === 'Escape') document.querySelectorAll('.modal-overlay').forEach(m => m.classList.remove('open')); });
-
-    // Добавление мастера
-    document.getElementById('addMasterForm').onsubmit = e => {
-      e.preventDefault();
-      const newM = { id: Date.now(), name: document.getElementById('m_name').value.trim(), phone: document.getElementById('m_phone').value.trim(), category: document.getElementById('m_cat').value, desc: document.getElementById('m_desc').value.trim(), addedBy: document.getElementById('m_by').value.trim(), date: new Date().toLocaleDateString('ru-RU'), reviews: [] };
-      masters.unshift(newM); saveData(); toggleModal('masterModal', false); e.target.reset();
-    };
-
-    // Звёзды в отзыве
-    const starPicker = document.getElementById('starPicker');
-    starPicker.querySelectorAll('span').forEach(s => {
-      s.onclick = () => {
-        const val = parseInt(s.dataset.v);
-        document.getElementById('r_rating').value = val;
-        starPicker.querySelectorAll('span').forEach(st => st.classList.toggle('active', parseInt(st.dataset.v) <= val));
-      };
-    });
-
-    // Добавление отзыва
-    function openReviewModal(id) {
-      document.getElementById('r_masterId').value = id;
-      starPicker.querySelectorAll('span').forEach(s => s.classList.toggle('active', true));
-      document.getElementById('r_rating').value = 5;
-      toggleModal('reviewModal', true);
-    }
-    document.getElementById('addReviewForm').onsubmit = e => {
-      e.preventDefault();
-      const id = parseInt(document.getElementById('r_masterId').value);
-      const master = masters.find(m => m.id === id);
-      if (!master) return;
-      const review = { author: document.getElementById('r_author').value.trim(), rating: parseInt(document.getElementById('r_rating').value), text: document.getElementById('r_text').value.trim(), date: new Date().toLocaleDateString('ru-RU') };
-      master.reviews = master.reviews || [];
-      master.reviews.unshift(review);
-      saveData(); toggleModal('reviewModal', false); e.target.reset();
-      alert('✅ Спасибо за отзыв!');
-    };
-
-    function deleteMaster(id) {
-      if (confirm('Удалить этот контакт и все отзывы?')) {
-        masters = masters.filter(m => m.id !== id); saveData();
+      let html = '';
+      for (const [category, items] of Object.entries(grouped)) {
+        html += `<h2 class="section-title">${getCategoryIcon(category)} ${category}</h2>`;
+        html += `<div class="grid">`;
+        html += items.map(item => createCard(item)).join('');
+        html += `</div>`;
       }
+      
+      content.innerHTML = html;
     }
 
-    document.getElementById('searchInput').addEventListener('input', renderMasters);
+function getCategoryIcon(category) {
+  const icons = {
+    'Бытовые услуги': '🔧',
+    'Строительство': '🏗️',
+    'Еда и рестораны': '🍽️',
+    'Магазины и доставки': '🛒',
+    'Отдых и развлечения': '🎉',
+    'Мероприятия в посёлке': '🎪',
+    'Медицина и аптеки': '🏥',
+    'Животные и защита от насекомых': '🐾'
+  };
+  return icons[category] || '📋';
+}
 
-    // Экспорт/Импорт
-    document.getElementById('exportData').onclick = () => {
-      const blob = new Blob([JSON.stringify(masters, null, 2)], {type: 'application/json'});
-      const a = document.createElement('a'); a.href = URL.createObjectURL(blob);
-      a.download = `data.json`; a.click();
-    };
-    document.getElementById('importData').onclick = () => document.getElementById('importFile').click();
-    document.getElementById('importFile').onchange = e => {
-      const file = e.target.files[0]; if(!file) return;
-      const reader = new FileReader();
-      reader.onload = ev => {
-        try {
-          const data = JSON.parse(ev.target.result);
-          if(Array.isArray(data)) { masters = data; saveData(); alert('✅ База обновлена!'); }
-        } catch { alert('❌ Ошибка формата'); }
-      }; reader.readAsText(file); e.target.value = '';
-    };
-    document.getElementById('fetchGitHub').onclick = loadData;
+    function createCard(item) {
+      const phoneLinks = item.phone ? item.phone.split(',').map(p => p.trim()).map(p => {
+        const cleanPhone = p.replace(/\D/g, '');
+        return `<a href="tel:${cleanPhone}" class="card-phone">📞 ${p}</a>`;
+      }).join(' ') : '';
 
-    function escapeHtml(t) { const d = document.createElement('div'); d.textContent = t; return d.innerHTML; }
+      const websiteLink = item.website ? `<a href="${item.website}" target="_blank" style="color: var(--primary); text-decoration: none; font-weight: 600;">🌐 Сайт</a>` : '';
 
-    // Инициализация
-    loadData();
+      return `
+        <div class="card">
+          <div class="card-header">
+            <div>
+              <div class="card-title">${item.name}</div>
+              ${item.company ? `<div class="card-company">${item.company}</div>` : ''}
+            </div>
+            <span class="category-badge">${item.category}</span>
+          </div>
+          ${phoneLinks}
+          ${item.desc ? `<div class="card-desc">${item.desc}</div>` : ''}
+          ${item.price ? `<div class="card-price">💰 ${item.price}</div>` : ''}
+          ${websiteLink ? `<div style="margin-top: 0.5rem;">${websiteLink}</div>` : ''}
+          <div class="card-meta">
+            ${item.author ? `<span class="card-author"> Добавил: ${item.author}</span>` : '<span></span>'}
+          </div>
+        </div>
+      `;
+    }
+
+    function exportData() {
+      const dataStr = "text/json;charset=utf-8," + encodeURIComponent(JSON.stringify(catalogData, null, 2));
+      const a = document.createElement('a');
+      a.href = dataStr;
+      a.download = `smartville_catalog_${new Date().toISOString().slice(0,10)}.json`;
+      a.click();
+    }
+
+    // Start
+    init();
   </script>
 </body>
 </html>
