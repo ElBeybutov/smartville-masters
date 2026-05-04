@@ -97,6 +97,13 @@
 
     function clearData() { els.rawData.value = ''; newData = []; els.previewCard.style.display = 'none'; }
 
+// Добавьте это в начало publishToGitHub
+console.log('Исходные данные:', JSON.stringify(newData, null, 2));
+const testStr = 'Проверка: Водоочистка';
+const testEncoded = btoa(unescape(encodeURIComponent(testStr)));
+const testDecoded = decodeURIComponent(escape(atob(testEncoded)));
+console.log('Тест кодировки:', testStr, '→', testDecoded, testStr === testDecoded ? '✅' : '❌');
+
     async function publishToGitHub() {
   const owner = els.gh_owner.value.trim();
   const repo = els.gh_repo.value.trim();
