@@ -139,7 +139,18 @@ async function publishToGitHub() {
     let merged = [...currentData];
     
     newData.forEach(item => {
-      if(!existingIds.has(item.id)) {
+      // Если это отзыв (type: 'review')
+      if (item.type === 'review') {
+        const master = merged.find(m => m.id === item.masterId);
+        if (master) {
+          master.reviews = master.reviews || [];
+          // Проверяем дубликаты отзывов
+          const exists = master.reviews.some(r => r.text === item.review.text && r.author === item.review.author);
+          if (!exists) master.reviews.unshift(item.review);
+        }
+      } 
+      // Если это новый контакт
+      else if (!existingIds.has(item.id)) {
         item.id = Date.now() + Math.floor(Math.random() * 10000);
         item.reviews = item.reviews || [];
         merged.unshift(item);

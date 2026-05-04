@@ -401,11 +401,50 @@
 
       function openReviewModal(id) { document.getElementById('r_masterId').value = id; els.ratingInput.value = 5; updateStarsUI(5); openModal(els.reviewModal); }
 
-      els.reviewForm.onsubmit = async e => {
+            els.reviewForm.onsubmit = async e => {
         e.preventDefault();
-        const id=parseInt(document.getElementById('r_masterId').value), item=catalogData.find(i=>i.id===id); if(!item) return;
-        item.reviews=item.reviews||[];
-        item.reviews.unshift({ author:document.getElementById('r_author').value.trim(), rating:parseInt(els.ratingInput.value), text:document.getElementById('r_text').value.trim(), date:new Date().toLocaleDateString('ru-RU') });
+        const id = parseInt(document.getElementById('r_masterId').value);
+        const item = catalogData.find(i => i.id === id);
+        if (!item) return;
+
+        const newReview = {
+          author: document.getElementById('r_author').value.trim(),
+          rating: parseInt(els.ratingInput.value),
+          text: document.getElementById('r_text').value.trim(),
+          date: new Date().toLocaleDateString('ru-RU')
+        };
+
+        // 1. Локально добавляем для мгновенного отображения
+        item.reviews = item.reviews || [];
+        item.reviews.unshift(newReview);
+        renderAll();
+        closeModal(els.reviewModal);
+        els.reviewForm.reset();
+
+        // 2. Отправляем на модерацию через EmailJS
+        showSync('loading', '⏳ Отправка отзыва на модерацию...');
+        try {
+          await emailjs.send(EMAILJS_SERVICE_ID, EMAILJS_TEMPLATE_ID, {
+            from_name: newReview.author,
+            contact_name: 'Отзыв на ' + item.name,
+            contact_company: item.company || '',
+            contact_phone: item.phone || '',
+            contact_rubric: item.rubric,
+            contact_category: item.category,
+            contact_desc: `⭐ Рейтинг: ${newReview.rating}/5\n💬 Текст: ${newReview.text}`,
+            contact_price: '',
+            contact_web: '',
+            author_name: newReview.author,
+            contact_json: JSON.stringify({ type: 'review', masterId: id, review: newReview }, null, 2)
+          });
+          showSync('success', '✅ Отзыв отправлен! Появится после проверки.');
+        } catch(err) {
+          console.error(err);
+          showSync('error', '❌ Ошибка отправки отзыва.');
+        }
+      };
+
+
         renderAll(); closeModal(els.reviewModal); els.reviewForm.reset(); showSync('success', '✅ Отзыв опубликован!');
       };
 
