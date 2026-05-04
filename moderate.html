@@ -97,6 +97,7 @@
 
     function clearData() { els.rawData.value = ''; newData = []; els.previewCard.style.display = 'none'; }
 
+
 async function publishToGitHub() {
   const owner = els.gh_owner.value.trim();
   const repo = els.gh_repo.value.trim();
@@ -126,15 +127,11 @@ async function publishToGitHub() {
       const file = await getRes.json();
       sha = file.sha;
       
-      // 🔧 Декодируем base64 → UTF-8
-      const binaryString = atob(file.content);
-      const bytes = new Uint8Array(binaryString.length);
-      for (let i = 0; i < binaryString.length; i++) {
-        bytes[i] = binaryString.charCodeAt(i);
-      }
-      const decoder = new TextDecoder('utf-8');
-      const jsonString = decoder.decode(bytes);
+      // 🔧 Декодируем base64 → UTF-8 (ПРОВЕРЕННЫЙ МЕТОД)
+      const jsonString = decodeURIComponent(escape(atob(file.content)));
       currentData = JSON.parse(jsonString);
+      
+      console.log('✅ Загружено контактов:', currentData.length);
     }
 
     // 2. Объединяем данные
@@ -149,13 +146,12 @@ async function publishToGitHub() {
       }
     });
 
-    // 3. 🔧 Кодируем UTF-8 → base64 ПРАВИЛЬНО
+    // 3. 🔧 Кодируем UTF-8 → base64 (ПРОВЕРЕННЫЙ МЕТОД)
     const jsonString = JSON.stringify(merged, null, 2);
-    const encoder = new TextEncoder();
-    const bytes = encoder.encode(jsonString);
-    let binary = '';
-    bytes.forEach(b => binary += String.fromCharCode(b));
-    const base64Content = btoa(binary);
+    console.log('📝 Исходный JSON (первые 100 символов):', jsonString.substring(0, 100));
+    
+    const base64Content = btoa(unescape(encodeURIComponent(jsonString)));
+    console.log('✅ Закодировано в base64, длина:', base64Content.length);
 
     const payload = {
       message: `📝 Модерация: добавлено ${newData.length} контактов (${new Date().toLocaleDateString('ru-RU')})`,
@@ -180,10 +176,11 @@ async function publishToGitHub() {
     clearData();
     
   } catch(e) { 
-    console.error(e);
+    console.error('❌ Ошибка:', e);
     showStatus('error', '❌ Ошибка: ' + e.message); 
   }
 }
+
 
     function showStatus(type, msg) {
       els.status.className = `status ${type}`; els.status.textContent = msg; els.status.style.display = 'block';
