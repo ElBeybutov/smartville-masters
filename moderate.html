@@ -98,62 +98,86 @@
     function clearData() { els.rawData.value = ''; newData = []; els.previewCard.style.display = 'none'; }
 
     async function publishToGitHub() {
-      const { gh_owner: owner, gh_repo: repo, gh_branch: branch, gh_token: token } = Object.fromEntries(['gh_owner','gh_repo','gh_branch','gh_token'].map(id => [id, els[id].value.trim()]));
-      if(!owner || !repo || !token) { showStatus('error', '❌ Заполните настройки GitHub'); return; }
-      showStatus('loading', '⏳ Загрузка текущей базы и публикация...');
+  const owner = els.gh_owner.value.trim();
+  const repo = els.gh_repo.value.trim();
+  const branch = els.gh_branch.value.trim();
+  const token = els.gh_token.value.trim();
+  
+  if(!owner || !repo || !token) { 
+    showStatus('error', '❌ Заполните настройки GitHub'); 
+    return; 
+  }
+  
+  showStatus('loading', '⏳ Загрузка текущей базы и публикация...');
 
-      const url = `https://api.github.com/repos/${owner}/${repo}/contents/data.json?ref=${branch}`;
-      const headers = { Authorization: `token ${token}`, Accept: 'application/vnd.github.v3+json' };
+  const url = `https://api.github.com/repos/${owner}/${repo}/contents/data.json?ref=${branch}`;
+  const headers = { 
+    Authorization: `token ${token}`, 
+    Accept: 'application/vnd.github.v3+json',
+    'Content-Type': 'application/json; charset=utf-8'
+  };
+  
+  try {
+    let sha = null;
+    let currentData = [];
+    
+    // 1. Получаем текущий файл
+    const getRes = await fetch(url, { headers });
+    if(getRes.ok) {
+      const file = await getRes.json();
+      sha = file.sha;
       
-      try {
-        let sha = null, currentData = [];
-        
-        // 1. Получаем текущий файл с GitHub
-        const getRes = await fetch(url, { headers });
-        if(getRes.ok) {
-          const file = await getRes.json();
-          sha = file.sha;
-          // 🔧 Корректное декодирование base64 → UTF-8
-          const binary = atob(file.content);
-          const bytes = Uint8Array.from(binary, c => c.charCodeAt(0));
-          const decoder = new TextDecoder('utf-8');
-          currentData = JSON.parse(decoder.decode(bytes));
-        }
-
-        // 2. Объединение с проверкой дублей по ID
-        const existingIds = new Set(currentData.map(i => i.id));
-        let merged = [...currentData];
-        newData.forEach(item => {
-          if(!existingIds.has(item.id)) {
-            item.id = Date.now() + Math.floor(Math.random() * 1000);
-            item.reviews = item.reviews || [];
-            merged.unshift(item);
-          }
-        });
-
-        // 3. 🔧 Корректное кодирование UTF-8 → base64 для отправки
-        const encoder = new TextEncoder();
-        const utf8Bytes = encoder.encode(JSON.stringify(merged, null, 2));
-        const binary = Array.from(utf8Bytes, byte => String.fromCharCode(byte)).join('');
-        const base64Content = btoa(binary);
-
-        const payload = {
-          message: `📝 Модерация: добавлено ${newData.length} контактов (${new Date().toLocaleDateString('ru-RU')})`,
-          content: base64Content,
-          branch
-        };
-        if(sha) payload.sha = sha;
-
-        const putRes = await fetch(url, { method: 'PUT', headers, body: JSON.stringify(payload) });
-        if(!putRes.ok) throw new Error((await putRes.json()).message || 'Ошибка коммита');
-        
-        showStatus('success', '✅ Успешно опубликовано! Сайт обновится через ~1 мин.');
-        clearData();
-      } catch(e) { 
-        console.error(e);
-        showStatus('error', '❌ Ошибка: ' + e.message); 
-      }
+      // 🔧 Корректное декодирование base64 → UTF-8
+      const decodedContent = atob(file.content);
+      currentData = JSON.parse(decodedContent);
     }
+
+    // 2. Объединяем данные
+    const existingIds = new Set(currentData.map(i => i.id));
+    let merged = [...currentData];
+    
+    newData.forEach(item => {
+      if(!existingIds.has(item.id)) {
+        item.id = Date.now() + Math.floor(Math.random() * 10000);
+        item.reviews = item.reviews || [];
+        merged.unshift(item);
+      }
+    });
+
+    // 3. 🔧 Правильное кодирование UTF-8 → base64
+    const jsonString = JSON.stringify(merged, null, 2);
+    const utf8Bytes = new TextEncoder().encode(jsonString);
+    let binary = '';
+    utf8Bytes.forEach(b => binary += String.fromCharCode(b));
+    const base64Content = btoa(binary);
+
+    const payload = {
+      message: `📝 Модерация: добавлено ${newData.length} контактов (${new Date().toLocaleDateString('ru-RU')})`,
+      content: base64Content,
+      branch: branch
+    };
+    
+    if(sha) payload.sha = sha;
+
+    const putRes = await fetch(url, { 
+      method: 'PUT', 
+      headers: headers, 
+      body: JSON.stringify(payload) 
+    });
+    
+    if(!putRes.ok) {
+      const errorData = await putRes.json();
+      throw new Error(errorData.message || 'Ошибка коммита');
+    }
+    
+    showStatus('success', `✅ Успешно опубликовано ${newData.length} контактов! Сайт обновится через ~1 мин.`);
+    clearData();
+    
+  } catch(e) { 
+    console.error(e);
+    showStatus('error', '❌ Ошибка: ' + e.message); 
+  }
+}
 
     function showStatus(type, msg) {
       els.status.className = `status ${type}`; els.status.textContent = msg; els.status.style.display = 'block';
