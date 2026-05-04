@@ -104,34 +104,55 @@
 
       const url = `https://api.github.com/repos/${owner}/${repo}/contents/data.json?ref=${branch}`;
       const headers = { Authorization: `token ${token}`, Accept: 'application/vnd.github.v3+json' };
+      
       try {
         let sha = null, currentData = [];
+        
+        // 1. Получаем текущий файл с GitHub
         const getRes = await fetch(url, { headers });
-        if(getRes.ok) { const file = await getRes.json(); sha = file.sha; currentData = JSON.parse(atob(file.content)); }
+        if(getRes.ok) {
+          const file = await getRes.json();
+          sha = file.sha;
+          // 🔧 Корректное декодирование base64 → UTF-8
+          const binary = atob(file.content);
+          const bytes = Uint8Array.from(binary, c => c.charCodeAt(0));
+          const decoder = new TextDecoder('utf-8');
+          currentData = JSON.parse(decoder.decode(bytes));
+        }
 
-        // Объединение с проверкой дублей по ID
+        // 2. Объединение с проверкой дублей по ID
         const existingIds = new Set(currentData.map(i => i.id));
         let merged = [...currentData];
         newData.forEach(item => {
           if(!existingIds.has(item.id)) {
-            item.id = Date.now() + Math.random()*1000|0; // Уникальный ID
+            item.id = Date.now() + Math.floor(Math.random() * 1000);
             item.reviews = item.reviews || [];
             merged.unshift(item);
           }
         });
 
+        // 3. 🔧 Корректное кодирование UTF-8 → base64 для отправки
+        const encoder = new TextEncoder();
+        const utf8Bytes = encoder.encode(JSON.stringify(merged, null, 2));
+        const binary = Array.from(utf8Bytes, byte => String.fromCharCode(byte)).join('');
+        const base64Content = btoa(binary);
+
         const payload = {
           message: `📝 Модерация: добавлено ${newData.length} контактов (${new Date().toLocaleDateString('ru-RU')})`,
-          content: btoa(unescape(encodeURIComponent(JSON.stringify(merged, null, 2)))),
+          content: base64Content,
           branch
         };
         if(sha) payload.sha = sha;
 
         const putRes = await fetch(url, { method: 'PUT', headers, body: JSON.stringify(payload) });
         if(!putRes.ok) throw new Error((await putRes.json()).message || 'Ошибка коммита');
+        
         showStatus('success', '✅ Успешно опубликовано! Сайт обновится через ~1 мин.');
         clearData();
-      } catch(e) { showStatus('error', '❌ Ошибка: ' + e.message); }
+      } catch(e) { 
+        console.error(e);
+        showStatus('error', '❌ Ошибка: ' + e.message); 
+      }
     }
 
     function showStatus(type, msg) {
