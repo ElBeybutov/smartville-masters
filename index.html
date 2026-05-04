@@ -359,8 +359,44 @@
       els.searchInput.oninput = () => { searchQuery=els.searchInput.value.toLowerCase(); renderGrid(); };
       els.searchInput.onkeydown = e => { if(e.key==='Enter') { searchQuery=els.searchInput.value.toLowerCase(); renderGrid(); }};
 
-      async function loadDataFromGitHub() {
-        try { const res = await fetch('data.json', { cache: 'no-store' }); if(res.ok) { const d=await res.json(); if(Array.isArray(d)&&d.length>0) { catalogData=d; renderAll(); } } } catch(e){}
+            async function loadDataFromGitHub() {
+        try {
+          const res = await fetch('data.json', { cache: 'no-store' });
+          if (res.ok) {
+            const remoteData = await res.json();
+            if (Array.isArray(remoteData) && remoteData.length > 0) {
+              catalogData = remoteData;
+
+              // === НОВОЕ: Автоматическое обновление списка рубрик и категорий ===
+              // 1. Находим все уникальные рубрики из загруженного файла
+              const uniqueRubrics = [...new Set(catalogData.map(item => item.rubric))];
+              
+              // 2. Проверяем, есть ли в конфиге новые рубрики
+              let configUpdated = false;
+              uniqueRubrics.forEach(rubric => {
+                if (!RUBRICS_CONFIG[rubric]) {
+                  // Если рубрики нет, создаем её и собираем все категории для неё из данных
+                  const categoriesInRubric = [...new Set(catalogData
+                    .filter(i => i.rubric === rubric)
+                    .map(i => i.category))];
+                  
+                  RUBRICS_CONFIG[rubric] = categoriesInRubric;
+                  configUpdated = true;
+                }
+              });
+
+              // 3. Если конфиг изменился, сохраняем в localStorage
+              if (configUpdated) {
+                localStorage.setItem('sv_rubrics_config', JSON.stringify(RUBRICS_CONFIG));
+              }
+              // ====================================================================
+
+              renderAll();
+            }
+          }
+        } catch (e) {
+          console.error('Ошибка загрузки с GitHub', e);
+        }
       }
       renderAll(); loadDataFromGitHub();
     });
