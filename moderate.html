@@ -97,14 +97,7 @@
 
     function clearData() { els.rawData.value = ''; newData = []; els.previewCard.style.display = 'none'; }
 
-// Добавьте это в начало publishToGitHub
-console.log('Исходные данные:', JSON.stringify(newData, null, 2));
-const testStr = 'Проверка: Водоочистка';
-const testEncoded = btoa(unescape(encodeURIComponent(testStr)));
-const testDecoded = decodeURIComponent(escape(atob(testEncoded)));
-console.log('Тест кодировки:', testStr, '→', testDecoded, testStr === testDecoded ? '✅' : '❌');
-
-    async function publishToGitHub() {
+async function publishToGitHub() {
   const owner = els.gh_owner.value.trim();
   const repo = els.gh_repo.value.trim();
   const branch = els.gh_branch.value.trim();
@@ -120,8 +113,7 @@ console.log('Тест кодировки:', testStr, '→', testDecoded, testStr
   const url = `https://api.github.com/repos/${owner}/${repo}/contents/data.json?ref=${branch}`;
   const headers = { 
     Authorization: `token ${token}`, 
-    Accept: 'application/vnd.github.v3+json',
-    'Content-Type': 'application/json; charset=utf-8'
+    Accept: 'application/vnd.github.v3+json'
   };
   
   try {
@@ -134,9 +126,15 @@ console.log('Тест кодировки:', testStr, '→', testDecoded, testStr
       const file = await getRes.json();
       sha = file.sha;
       
-      // 🔧 Корректное декодирование base64 → UTF-8
-      const decodedContent = atob(file.content);
-      currentData = JSON.parse(decodedContent);
+      // 🔧 Декодируем base64 → UTF-8
+      const binaryString = atob(file.content);
+      const bytes = new Uint8Array(binaryString.length);
+      for (let i = 0; i < binaryString.length; i++) {
+        bytes[i] = binaryString.charCodeAt(i);
+      }
+      const decoder = new TextDecoder('utf-8');
+      const jsonString = decoder.decode(bytes);
+      currentData = JSON.parse(jsonString);
     }
 
     // 2. Объединяем данные
@@ -151,11 +149,12 @@ console.log('Тест кодировки:', testStr, '→', testDecoded, testStr
       }
     });
 
-    // 3. 🔧 Правильное кодирование UTF-8 → base64
+    // 3. 🔧 Кодируем UTF-8 → base64 ПРАВИЛЬНО
     const jsonString = JSON.stringify(merged, null, 2);
-    const utf8Bytes = new TextEncoder().encode(jsonString);
+    const encoder = new TextEncoder();
+    const bytes = encoder.encode(jsonString);
     let binary = '';
-    utf8Bytes.forEach(b => binary += String.fromCharCode(b));
+    bytes.forEach(b => binary += String.fromCharCode(b));
     const base64Content = btoa(binary);
 
     const payload = {
@@ -177,7 +176,7 @@ console.log('Тест кодировки:', testStr, '→', testDecoded, testStr
       throw new Error(errorData.message || 'Ошибка коммита');
     }
     
-    showStatus('success', `✅ Успешно опубликовано ${newData.length} контактов! Сайт обновится через ~1 мин.`);
+    showStatus('success', `✅ Успешно опубликовано ${newData.length} контактов!`);
     clearData();
     
   } catch(e) { 
