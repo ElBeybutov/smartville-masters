@@ -1,0 +1,143 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>SmartVille — Админ-панель</title>
+  <link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@500;600;700&family=Open+Sans:wght@400;600&display=swap" rel="stylesheet">
+  <style>
+    :root { --primary: #2d5a3d; --secondary: #d4a574; --bg: #f7f5ee; --card: #fff; --border: #e0d5c1; --text: #2c3e2d; }
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    body { font-family: 'Open Sans', sans-serif; background: var(--bg); color: var(--text); padding: 2rem; max-width: 800px; margin: 0 auto; }
+    h1, h2 { font-family: 'Montserrat', sans-serif; margin-bottom: 1rem; }
+    .card { background: var(--card); padding: 1.5rem; border-radius: 12px; box-shadow: 0 4px 12px rgba(0,0,0,0.08); margin-bottom: 1.5rem; border: 1px solid var(--border); }
+    input, textarea, select { width: 100%; padding: 0.8rem; margin-bottom: 1rem; border: 1px solid var(--border); border-radius: 8px; font-family: inherit; }
+    button { background: var(--primary); color: white; border: none; padding: 0.8rem 1.5rem; border-radius: 8px; cursor: pointer; font-weight: 600; transition: 0.2s; }
+    button:hover { background: #1e3d28; }
+    .btn-sec { background: var(--secondary); } .btn-sec:hover { background: #b8895c; }
+    .status { margin-top: 1rem; padding: 0.8rem; border-radius: 8px; font-weight: 600; display: none; }
+    .status.success { background: #d4edda; color: #155724; } .status.error { background: #f8d7da; color: #721c24; } .status.loading { background: #fff3cd; color: #856404; }
+    .preview-table { width: 100%; border-collapse: collapse; margin: 1rem 0; font-size: 0.9rem; }
+    .preview-table th, .preview-table td { border: 1px solid var(--border); padding: 0.5rem; text-align: left; }
+    .preview-table th { background: #f1f5f0; }
+    .actions { display: flex; gap: 1rem; margin-top: 1rem; }
+    #dropArea { border: 2px dashed var(--border); padding: 2rem; text-align: center; border-radius: 8px; cursor: pointer; transition: 0.2s; }
+    #dropArea:hover { background: #f9f9f9; border-color: var(--primary); }
+  </style>
+</head>
+<body>
+  <h1>🔧 Админ-панель SmartVille</h1>
+  <p style="margin-bottom: 2rem; color: #666;">Загрузите JSON-файл с заявками или вставьте контакты вручную, затем опубликуйте в GitHub.</p>
+
+  <div class="card">
+    <h2>1. Настройки GitHub</h2>
+    <input type="text" id="gh_owner" placeholder="GitHub Username">
+    <input type="text" id="gh_repo" placeholder="Repository Name">
+    <input type="text" id="gh_branch" value="main" placeholder="Branch">
+    <input type="password" id="gh_token" placeholder="Personal Access Token (PAT)">
+    <button onclick="saveGhSettings()">💾 Сохранить настройки</button>
+  </div>
+
+  <div class="card">
+    <h2>2. Данные для добавления</h2>
+    <div id="dropArea" onclick="document.getElementById('fileInput').click()">📁 Перетащите файл .json сюда или нажмите для загрузки</div>
+    <input type="file" id="fileInput" accept=".json" style="display:none">
+    <textarea id="rawData" placeholder='Или вставьте JSON вручную (массив объектов или одиночный объект):' rows="8"></textarea>
+    <button onclick="parseData()">🔍 Предпросмотр данных</button>
+  </div>
+
+  <div class="card" id="previewCard" style="display:none;">
+    <h2>3. Предпросмотр</h2>
+    <div id="previewTable"></div>
+    <div class="actions">
+      <button class="btn-sec" onclick="clearData()">❌ Очистить</button>
+      <button onclick="publishToGitHub()">🚀 Опубликовать в data.json</button>
+    </div>
+  </div>
+
+  <div id="status" class="status"></div>
+
+  <script>
+    let newData = [];
+    const els = { gh_owner: document.getElementById('gh_owner'), gh_repo: document.getElementById('gh_repo'), gh_branch: document.getElementById('gh_branch'), gh_token: document.getElementById('gh_token'), fileInput: document.getElementById('fileInput'), dropArea: document.getElementById('dropArea'), rawData: document.getElementById('rawData'), previewCard: document.getElementById('previewCard'), previewTable: document.getElementById('previewTable'), status: document.getElementById('status') };
+
+    // Загрузка сохраненных настроек
+    ['gh_owner','gh_repo','gh_branch','gh_token'].forEach(id => { const v = localStorage.getItem(id); if(v) els[id].value = v; });
+
+    function saveGhSettings() {
+      ['gh_owner','gh_repo','gh_branch','gh_token'].forEach(id => localStorage.setItem(id, els[id].value.trim()));
+      showStatus('success', '✅ Настройки сохранены');
+    }
+
+    els.fileInput.onchange = e => {
+      const file = e.target.files[0];
+      if(!file) return;
+      const reader = new FileReader();
+      reader.onload = ev => els.rawData.value = ev.target.result;
+      reader.readAsText(file);
+    };
+
+    function parseData() {
+      try {
+        let parsed = JSON.parse(els.rawData.value);
+        if(!Array.isArray(parsed)) parsed = [parsed];
+        newData = parsed.filter(i => i.name && i.phone);
+        if(!newData.length) throw new Error('Нет валидных контактов');
+        renderPreview();
+      } catch(e) { showStatus('error', '❌ Ошибка формата JSON: ' + e.message); }
+    }
+
+    function renderPreview() {
+      els.previewCard.style.display = 'block';
+      let html = '<table class="preview-table"><tr><th>Имя</th><th>Компания</th><th>Телефон</th><th>Рубрика</th><th>Категория</th></tr>';
+      newData.forEach(i => html += `<tr><td>${i.name}</td><td>${i.company||'-'}</td><td>${i.phone}</td><td>${i.rubric}</td><td>${i.category}</td></tr>`);
+      html += '</table>';
+      els.previewTable.innerHTML = html;
+    }
+
+    function clearData() { els.rawData.value = ''; newData = []; els.previewCard.style.display = 'none'; }
+
+    async function publishToGitHub() {
+      const { gh_owner: owner, gh_repo: repo, gh_branch: branch, gh_token: token } = Object.fromEntries(['gh_owner','gh_repo','gh_branch','gh_token'].map(id => [id, els[id].value.trim()]));
+      if(!owner || !repo || !token) { showStatus('error', '❌ Заполните настройки GitHub'); return; }
+      showStatus('loading', '⏳ Загрузка текущей базы и публикация...');
+
+      const url = `https://api.github.com/repos/${owner}/${repo}/contents/data.json?ref=${branch}`;
+      const headers = { Authorization: `token ${token}`, Accept: 'application/vnd.github.v3+json' };
+      try {
+        let sha = null, currentData = [];
+        const getRes = await fetch(url, { headers });
+        if(getRes.ok) { const file = await getRes.json(); sha = file.sha; currentData = JSON.parse(atob(file.content)); }
+
+        // Объединение с проверкой дублей по ID
+        const existingIds = new Set(currentData.map(i => i.id));
+        let merged = [...currentData];
+        newData.forEach(item => {
+          if(!existingIds.has(item.id)) {
+            item.id = Date.now() + Math.random()*1000|0; // Уникальный ID
+            item.reviews = item.reviews || [];
+            merged.unshift(item);
+          }
+        });
+
+        const payload = {
+          message: `📝 Модерация: добавлено ${newData.length} контактов (${new Date().toLocaleDateString('ru-RU')})`,
+          content: btoa(unescape(encodeURIComponent(JSON.stringify(merged, null, 2)))),
+          branch
+        };
+        if(sha) payload.sha = sha;
+
+        const putRes = await fetch(url, { method: 'PUT', headers, body: JSON.stringify(payload) });
+        if(!putRes.ok) throw new Error((await putRes.json()).message || 'Ошибка коммита');
+        showStatus('success', '✅ Успешно опубликовано! Сайт обновится через ~1 мин.');
+        clearData();
+      } catch(e) { showStatus('error', '❌ Ошибка: ' + e.message); }
+    }
+
+    function showStatus(type, msg) {
+      els.status.className = `status ${type}`; els.status.textContent = msg; els.status.style.display = 'block';
+      setTimeout(() => els.status.style.display = 'none', 5000);
+    }
+  </script>
+</body>
+</html>
