@@ -10,7 +10,14 @@
     "price": "",
     "web": "",
     "author": "Эльман",
-    "reviews": []
+    "reviews": [
+      {
+        "author": "ААА",
+        "rating": 5,
+        "text": "ваыв",
+        "date": "04.05.2026"
+      }
+    ]
   },
   {
     "id": 1,
