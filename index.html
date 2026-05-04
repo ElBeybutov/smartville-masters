@@ -243,7 +243,38 @@
       let catalogData = [...FALLBACK_DATA];
       let activeRubric = 'Все', activeCategory = 'Все', searchQuery = '';
 
-      const els = { stats: document.getElementById('stats'), rubricTabs: document.getElementById('rubricTabs'), subcatPills: document.getElementById('subcatPills'), grid: document.getElementById('grid'), searchInput: document.getElementById('searchInput'), searchBtn: document.getElementById('searchBtn'), syncStatus: document.getElementById('syncStatus'), openAddModal: document.getElementById('openAddModal'), addModal: document.getElementById('addModal'), closeAddModal: document.getElementById('closeAddModal'), cancelForm: document.getElementById('cancelForm'), addForm: document.getElementById('addForm'), f_rubric: document.getElementById('f_rubric'), f_cat: document.getElementById('f_cat'), rubricList: document.getElementById('rubricList'), catList: document.getElementById('catList'), f_phone: document.getElementById('f_phone'), reviewModal: document.getElementById('reviewModal'), closeReviewModal: document.getElementById('closeReviewModal'), cancelReviewModal: document.getElementById('cancelReviewModal'), reviewForm: document.getElementById('reviewForm'), r_masterId: document.getElementById('r_masterId'), starPicker: document.getElementById('starPicker'), ratingInput: document.getElementById('r_rating') };
+      const els = { 
+        stats: document.getElementById('stats'), 
+        rubricTabs: document.getElementById('rubricTabs'), 
+        subcatPills: document.getElementById('subcatPills'), 
+        grid: document.getElementById('grid'), 
+        searchInput: document.getElementById('searchInput'), 
+        searchBtn: document.getElementById('searchBtn'), 
+        syncStatus: document.getElementById('syncStatus'), 
+        openAddModal: document.getElementById('openAddModal'), 
+        addModal: document.getElementById('addModal'), 
+        closeAddModal: document.getElementById('closeAddModal'), 
+        cancelForm: document.getElementById('cancelForm'), 
+        addForm: document.getElementById('addForm'), 
+        f_rubric: document.getElementById('f_rubric'), 
+        f_cat: document.getElementById('f_cat'), 
+        f_name: document.getElementById('f_name'), 
+        f_company: document.getElementById('f_company'), 
+        f_phone: document.getElementById('f_phone'), 
+        f_desc: document.getElementById('f_desc'), 
+        f_price: document.getElementById('f_price'), 
+        f_web: document.getElementById('f_web'), 
+        f_author: document.getElementById('f_author'), 
+        rubricList: document.getElementById('rubricList'), 
+        catList: document.getElementById('catList'), 
+        reviewModal: document.getElementById('reviewModal'), 
+        closeReviewModal: document.getElementById('closeReviewModal'), 
+        cancelReviewModal: document.getElementById('cancelReviewModal'), 
+        reviewForm: document.getElementById('reviewForm'), 
+        r_masterId: document.getElementById('r_masterId'), 
+        starPicker: document.getElementById('starPicker'), 
+        ratingInput: document.getElementById('r_rating') 
+      };
 
       function showSync(status, msg) { els.syncStatus.className = `sync-status show ${status}`; els.syncStatus.textContent = msg; setTimeout(() => els.syncStatus.classList.remove('show'), 4000); }
 
