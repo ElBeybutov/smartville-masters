@@ -45,20 +45,12 @@
     .phone-btn:hover { background: var(--primary); color: white; }
     .card-desc { color: var(--text-light); font-size: 0.9rem; line-height: 1.5; margin: 0.5rem 0; }
     .card-price { background: #e8f5e9; color: var(--primary); padding: 0.4rem 0.7rem; border-radius: 6px; font-size: 0.85rem; font-weight: 600; display: inline-block; margin-top: 0.5rem; }
-    .card-footer { display: flex; justify-content: space-between; align-items: center; margin-top: 1rem; padding-top: 0.8rem; border-top: 1px dashed var(--border); font-size: 0.8rem; color: var(--text-light); }
+    .card-footer { display: flex; justify-content: space-between; align-items: center; margin-top: 1rem; padding-top: 0.8rem; border-top: 1px dashed var(--border); font-size: 0.8rem; color: var(--text-light); flex-wrap: wrap; gap: 0.5rem; }
     .site-link { color: var(--primary); text-decoration: none; font-weight: 600; }
     .review-btn { background: none; border: none; color: var(--secondary); cursor: pointer; font-size: 0.8rem; padding: 0; font-weight: 600; transition: 0.2s; }
     .review-btn:hover { text-decoration: underline; }
     .reviews-list-btn { background: none; border: none; color: var(--primary); cursor: pointer; font-size: 0.8rem; padding: 0; font-weight: 600; transition: 0.2s; }
     .reviews-list-btn:hover { text-decoration: underline; }
-    .review-item { padding: 0.8rem 0; border-bottom: 1px solid var(--border); }
-    .review-item:last-child { border-bottom: none; }
-    .review-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 0.3rem; }
-    .review-author { font-weight: 600; font-size: 0.9rem; }
-    .review-date { font-size: 0.75rem; color: var(--text-light); }
-    .review-stars { color: var(--star); font-size: 0.85rem; margin-bottom: 0.3rem; }
-    .review-text { font-size: 0.9rem; line-height: 1.4; color: var(--text); }
-    .no-reviews { text-align: center; color: var(--text-light); padding: 2rem 0; font-style: italic; }
     .rating-row { display: flex; align-items: center; gap: 0.5rem; margin-bottom: 0.5rem; }
     .stars { color: var(--star); letter-spacing: 2px; }
     .rating-count { color: var(--text-light); font-size: 0.8rem; }
@@ -94,6 +86,14 @@
     .star-picker span { color: #d0d0d0; transition: color 0.15s, transform 0.15s; }
     .star-picker span.active { color: var(--star); }
     .star-picker span:hover { transform: scale(1.15); }
+    .review-item { padding: 0.8rem 0; border-bottom: 1px solid var(--border); }
+    .review-item:last-child { border-bottom: none; }
+    .review-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 0.3rem; }
+    .review-author { font-weight: 600; font-size: 0.9rem; }
+    .review-date { font-size: 0.75rem; color: var(--text-light); }
+    .review-stars { color: var(--star); font-size: 0.85rem; margin-bottom: 0.3rem; }
+    .review-text { font-size: 0.9rem; line-height: 1.4; color: var(--text); }
+    .no-reviews { text-align: center; color: var(--text-light); padding: 2rem 0; font-style: italic; }
     @media (max-width: 768px) {
       .hero h1 { font-size: 1.9rem; }
       .grid { grid-template-columns: 1fr; }
@@ -161,7 +161,7 @@
         <div class="form-group"><label>Оценка</label><div class="star-picker" id="starPicker"><span data-v="1">★</span><span data-v="2">★</span><span data-v="3">★</span><span data-v="4">★</span><span data-v="5">★</span></div></div>
         <input type="hidden" id="r_rating" value="5">
         <div class="form-group"><label for="r_text">Текст отзыва</label><textarea id="r_text" required placeholder="Что понравилось?"></textarea></div>
-        <div class="btn-row"><button type="button" class="btn btn-sec" id="cancelReviewModal">Отмена</button><button type="submit" class="btn btn-primary">📤 Опубликовать</button></div>
+        <div class="btn-row"><button type="button" class="btn btn-sec" id="cancelReviewModal">Отмена</button><button type="submit" class="btn btn-primary">📤 Отправить на модерацию</button></div>
       </form>
     </div>
   </div>
@@ -169,7 +169,7 @@
   <script src="https://cdn.jsdelivr.net/npm/@emailjs/browser@3/dist/email.min.js"></script>
   <script>
     document.addEventListener('DOMContentLoaded', () => {
-      // === EMAILJS CONFIG (Вставьте сюда ваши ключи) ===
+      // === EMAILJS CONFIG ===
       const EMAILJS_PUBLIC_KEY = 'KEbATvnm4syggRqnc'; // из Account -> API Keys
       const EMAILJS_SERVICE_ID = 'service_9oqpk1l'; // из Email Services
       const EMAILJS_TEMPLATE_ID = 'template_ca8bipe'; // из Email Templates
@@ -187,6 +187,8 @@
       };
 
       let RUBRICS_CONFIG = JSON.parse(localStorage.getItem('sv_rubrics_config')) || JSON.parse(JSON.stringify(DEFAULT_RUBRICS));
+      
+      // Данные из CSV файлов
       const FALLBACK_DATA = [
         {id:1,rubric:"Бытовые услуги",category:"Водоочистка",name:"Водоочистка (фильтры, настройка)",company:"Алексей",phone:"+7(926)280-54-85",desc:"Замена фильтров, диагностика",price:"2500 - 3000 ₽",author:"4/13 Алексей",web:"",reviews:[]},
         {id:2,rubric:"Бытовые услуги",category:"Сантехника",name:"Сантехник",company:"Илья",phone:"+7(903)153-85-21",desc:"Показался компетентным",price:"",author:"4/13 Алексей",web:"",reviews:[]},
@@ -254,36 +256,16 @@
       let activeRubric = 'Все', activeCategory = 'Все', searchQuery = '';
 
       const els = {
-        stats: document.getElementById('stats'),
-        rubricTabs: document.getElementById('rubricTabs'),
-        subcatPills: document.getElementById('subcatPills'),
-        grid: document.getElementById('grid'),
-        searchInput: document.getElementById('searchInput'),
-        searchBtn: document.getElementById('searchBtn'),
-        syncStatus: document.getElementById('syncStatus'),
-        openAddModal: document.getElementById('openAddModal'),
-        addModal: document.getElementById('addModal'),
-        closeAddModal: document.getElementById('closeAddModal'),
-        cancelForm: document.getElementById('cancelForm'),
-        addForm: document.getElementById('addForm'),
-        f_rubric: document.getElementById('f_rubric'),
-        f_cat: document.getElementById('f_cat'),
-        f_name: document.getElementById('f_name'),
-        f_company: document.getElementById('f_company'),
-        f_phone: document.getElementById('f_phone'),
-        f_desc: document.getElementById('f_desc'),
-        f_price: document.getElementById('f_price'),
-        f_web: document.getElementById('f_web'),
-        f_author: document.getElementById('f_author'),
-        rubricList: document.getElementById('rubricList'),
-        catList: document.getElementById('catList'),
-        reviewModal: document.getElementById('reviewModal'),
-        closeReviewModal: document.getElementById('closeReviewModal'),
-        cancelReviewModal: document.getElementById('cancelReviewModal'),
-        reviewForm: document.getElementById('reviewForm'),
-        r_masterId: document.getElementById('r_masterId'),
-        starPicker: document.getElementById('starPicker'),
-        ratingInput: document.getElementById('r_rating')
+        stats: document.getElementById('stats'), rubricTabs: document.getElementById('rubricTabs'), subcatPills: document.getElementById('subcatPills'),
+        grid: document.getElementById('grid'), searchInput: document.getElementById('searchInput'), searchBtn: document.getElementById('searchBtn'),
+        syncStatus: document.getElementById('syncStatus'), openAddModal: document.getElementById('openAddModal'),
+        addModal: document.getElementById('addModal'), closeAddModal: document.getElementById('closeAddModal'), cancelForm: document.getElementById('cancelForm'),
+        addForm: document.getElementById('addForm'), f_rubric: document.getElementById('f_rubric'), f_cat: document.getElementById('f_cat'),
+        f_name: document.getElementById('f_name'), f_company: document.getElementById('f_company'), f_phone: document.getElementById('f_phone'),
+        f_desc: document.getElementById('f_desc'), f_price: document.getElementById('f_price'), f_web: document.getElementById('f_web'),
+        f_author: document.getElementById('f_author'), rubricList: document.getElementById('rubricList'), catList: document.getElementById('catList'),
+        reviewModal: document.getElementById('reviewModal'), closeReviewModal: document.getElementById('closeReviewModal'), cancelReviewModal: document.getElementById('cancelReviewModal'),
+        reviewForm: document.getElementById('reviewForm'), r_masterId: document.getElementById('r_masterId'), starPicker: document.getElementById('starPicker'), ratingInput: document.getElementById('r_rating')
       };
 
       function showSync(status, msg) { els.syncStatus.className = `sync-status show ${status}`; els.syncStatus.textContent = msg; setTimeout(() => els.syncStatus.classList.remove('show'), 4000); }
@@ -300,23 +282,63 @@
       function renderCategories() { els.subcatPills.innerHTML = ''; if (activeRubric === 'Все') { els.subcatPills.innerHTML = '<span style="color:var(--text-light); font-size:0.85rem;">Выберите рубрику для фильтрации</span>'; return; } const cats = ['Все', ...RUBRICS_CONFIG[activeRubric]]; cats.forEach(cat => { const pill = document.createElement('button'); pill.className = `pill ${activeCategory===cat?'active':''}`; pill.textContent = cat; pill.onclick = () => setCategory(cat); els.subcatPills.appendChild(pill); }); }
       function calcRating(reviews) { if (!reviews?.length) return { avg: 0, count: 0 }; const s = reviews.reduce((a,r)=>a+r.rating,0); return { avg:(s/reviews.length).toFixed(1), count:reviews.length }; }
 
-      function renderGrid() { els.grid.innerHTML = ''; const filtered = catalogData.filter(item => { const mR = activeRubric === 'Все' || item.rubric === activeRubric; const mC = activeCategory === 'Все' || item.category === activeCategory; const mS = !searchQuery || `${item.name} ${item.company} ${item.phone} ${item.desc}`.toLowerCase().includes(searchQuery); return mR && mC && mS; }); if (!filtered.length) { els.grid.innerHTML = `<div class="empty"><span>🔍</span><h3>Ничего не найдено</h3><p>Измените параметры поиска</p></div>`; return; } const frag = document.createDocumentFragment(); filtered.forEach(item => { const { avg, count } = calcRating(item.reviews); const stars = avg > 0 ? '★'.repeat(Math.round(avg)) + '☆'.repeat(5-Math.round(avg)) : '☆☆☆☆☆'; const card = document.createElement('div'); card.className = 'card'; let phonesHtml = ''; if(item.phone) item.phone.split(',').map(p=>p.trim()).forEach(p=>{ phonesHtml += `<a href="tel:${p.replace(/\D/g,'')}" class="phone-btn">📞 ${p}</a> `; }); const webHtml = item.web ? `<a href="${item.web}" target="_blank" class="site-link">🌐 Перейти</a>` : ''; card.innerHTML = `<div class="card-header"><div><div class="card-title">${item.name}</div><div class="card-company">${item.company||''}</div></div><span class="badge">${item.rubric}</span></div><div class="rating-row"><span class="stars">${stars}</span><span class="rating-count">${avg>0?avg:'—'} (${count})</span></div>${phonesHtml}<span class="tag">📌 ${item.category}</span>${item.desc?`<div class="card-desc">${item.desc}</div>`:''}${item.price?`<div class="card-price">💰 ${item.price}</div>`:''}${webHtml?`<div style="margin-top:0.5rem">${webHtml}</div>`:''}          <div class="card-footer">
-            <span>👤 ${item.author || 'Житель'}</span>
-            <div style="display:flex; gap:0.8rem;">
-              <button class="reviews-list-btn" data-id="${item.id}">📖 Отзывы (${count})</button>
-              <button class="review-btn" data-id="${item.id}">✍️ Оставить отзыв</button>
-            </div>
-          </div>`; frag.appendChild(card); }); els.grid.appendChild(frag); document.querySelectorAll('.review-btn').forEach(btn => btn.onclick = () => openReviewModal(parseInt(btn.dataset.id)));
-        document.querySelectorAll('.reviews-list-btn').forEach(btn => btn.onclick = () => openReviewsList(parseInt(btn.dataset.id))); }
+      function renderGrid() {
+        els.grid.innerHTML = '';
+        const filtered = catalogData.filter(item => {
+          const mR = activeRubric === 'Все' || item.rubric === activeRubric;
+          const mC = activeCategory === 'Все' || item.category === activeCategory;
+          const mS = !searchQuery || `${item.name} ${item.company} ${item.phone} ${item.desc}`.toLowerCase().includes(searchQuery);
+          return mR && mC && mS;
+        });
+        if (!filtered.length) { els.grid.innerHTML = `<div class="empty"><span>🔍</span><h3>Ничего не найдено</h3><p>Измените параметры поиска</p></div>`; return; }
+        
+        const frag = document.createDocumentFragment();
+        filtered.forEach(item => {
+          const { avg, count } = calcRating(item.reviews);
+          const stars = avg > 0 ? '★'.repeat(Math.round(avg)) + '☆'.repeat(5-Math.round(avg)) : '☆☆☆☆☆';
+          const card = document.createElement('div'); card.className = 'card';
+          let phonesHtml = '';
+          if(item.phone) item.phone.split(',').map(p=>p.trim()).forEach(p=>{ phonesHtml += `<a href="tel:${p.replace(/\D/g,'')}" class="phone-btn">📞 ${p}</a> `; });
+          const webHtml = item.web ? `<a href="${item.web}" target="_blank" class="site-link">🌐 Перейти</a>` : '';
+          card.innerHTML = `
+            <div class="card-header"><div><div class="card-title">${item.name}</div><div class="card-company">${item.company||''}</div></div><span class="badge">${item.rubric}</span></div>
+            <div class="rating-row"><span class="stars">${stars}</span><span class="rating-count">${avg>0?avg:'—'} (${count})</span></div>
+            ${phonesHtml}<span class="tag">📌 ${item.category}</span>
+            ${item.desc?`<div class="card-desc">${item.desc}</div>`:''}${item.price?`<div class="card-price">💰 ${item.price}</div>`:''}${webHtml?`<div style="margin-top:0.5rem">${webHtml}</div>`:''}
+            <div class="card-footer">
+              <span>👤 ${item.author||'Житель'}</span>
+              <div style="display:flex; gap:0.8rem;">
+                <button class="reviews-list-btn" data-id="${item.id}">📖 Отзывы (${count})</button>
+                <button class="review-btn" data-id="${item.id}">✍️ Оставить отзыв</button>
+              </div>
+            </div>`;
+          frag.appendChild(card);
+        });
+        els.grid.appendChild(frag);
+        document.querySelectorAll('.review-btn').forEach(btn => btn.onclick = () => openReviewModal(parseInt(btn.dataset.id)));
+        document.querySelectorAll('.reviews-list-btn').forEach(btn => btn.onclick = () => openReviewsList(parseInt(btn.dataset.id)));
+      }
 
-      function openModal(m) { m.classList.add('open'); } function closeModal(m) { m.classList.remove('open'); }
-      els.openAddModal.onclick = () => { updateFormLists(); openModal(els.addModal); }; els.closeAddModal.onclick = () => closeModal(els.addModal); els.cancelForm.onclick = () => closeModal(els.addModal); els.addModal.addEventListener('click', e => { if(e.target===els.addModal) closeModal(els.addModal); });
-      els.closeReviewModal.onclick = () => closeModal(els.reviewModal); els.cancelReviewModal.onclick = () => closeModal(els.reviewModal); els.reviewModal.addEventListener('click', e => { if(e.target===els.reviewModal) closeModal(els.reviewModal); });
+      function openModal(m) { m.classList.add('open'); }
+      function closeModal(m) { m.classList.remove('open'); }
+      els.openAddModal.onclick = () => { updateFormLists(); openModal(els.addModal); };
+      els.closeAddModal.onclick = () => closeModal(els.addModal);
+      els.cancelForm.onclick = () => closeModal(els.addModal);
+      els.addModal.addEventListener('click', e => { if(e.target===els.addModal) closeModal(els.addModal); });
+      els.closeReviewModal.onclick = () => closeModal(els.reviewModal);
+      els.cancelReviewModal.onclick = () => closeModal(els.reviewModal);
+      els.reviewModal.addEventListener('click', e => { if(e.target===els.reviewModal) closeModal(els.reviewModal); });
 
-      function updateFormLists() { els.rubricList.innerHTML = ''; Object.keys(RUBRICS_CONFIG).forEach(r => { const o=document.createElement('option'); o.value=r; els.rubricList.appendChild(o); }); els.catList.innerHTML = ''; const sel = els.f_rubric.value.trim(); const cats = sel && RUBRICS_CONFIG[sel] ? RUBRICS_CONFIG[sel] : [...new Set(Object.values(RUBRICS_CONFIG).flat())]; cats.forEach(c => { const o=document.createElement('option'); o.value=c; els.catList.appendChild(o); }); }
+      function updateFormLists() {
+        els.rubricList.innerHTML = '';
+        Object.keys(RUBRICS_CONFIG).forEach(r => { const o=document.createElement('option'); o.value=r; els.rubricList.appendChild(o); });
+        els.catList.innerHTML = '';
+        const sel = els.f_rubric.value.trim();
+        const cats = sel && RUBRICS_CONFIG[sel] ? RUBRICS_CONFIG[sel] : [...new Set(Object.values(RUBRICS_CONFIG).flat())];
+        cats.forEach(c => { const o=document.createElement('option'); o.value=c; els.catList.appendChild(o); });
+      }
       els.f_rubric.oninput = updateFormLists;
 
-      // === ОТПРАВКА НА МОДЕРАЦИЮ ЧЕРЕЗ EMAILJS ===
       els.addForm.onsubmit = async e => {
         e.preventDefault();
         const newItem = {
@@ -363,45 +385,9 @@
         star.addEventListener('click', () => { els.ratingInput.value = parseInt(star.dataset.v); updateStarsUI(parseInt(els.ratingInput.value)); });
       });
 
-
-      function openReviewsList(id) {
-        const item = catalogData.find(i => i.id === id);
-        if (!item || !item.reviews || !item.reviews.length) {
-          alert('📭 Отзывов пока нет. Будьте первым!');
-          return;
-        }
-        let html = `<h3 style="margin-bottom:1rem; color:var(--primary);">Отзывы о "${item.name}"</h3>`;
-        item.reviews.forEach(r => {
-          const stars = '★'.repeat(r.rating) + '☆'.repeat(5 - r.rating);
-          html += `
-            <div class="review-item">
-              <div class="review-header">
-                <span class="review-author">👤 ${r.author}</span>
-                <span class="review-date">📅 ${r.date}</span>
-              </div>
-              <div class="review-stars">${stars}</div>
-              <div class="review-text">${r.text}</div>
-            </div>
-          `;
-        });
-        
-        // Временное модальное окно для отзывов
-        const tempModal = document.createElement('div');
-        tempModal.className = 'modal-overlay open';
-        tempModal.innerHTML = `
-          <div class="modal" style="max-width:500px;">
-            <button class="close-btn" onclick="this.closest('.modal-overlay').remove()">&times;</button>
-            ${html}
-          </div>
-        `;
-        document.body.appendChild(tempModal);
-        tempModal.addEventListener('click', e => { if(e.target === tempModal) tempModal.remove(); });
-      }
-
-
       function openReviewModal(id) { document.getElementById('r_masterId').value = id; els.ratingInput.value = 5; updateStarsUI(5); openModal(els.reviewModal); }
 
-            els.reviewForm.onsubmit = async e => {
+      els.reviewForm.onsubmit = async e => {
         e.preventDefault();
         const id = parseInt(document.getElementById('r_masterId').value);
         const item = catalogData.find(i => i.id === id);
@@ -414,14 +400,12 @@
           date: new Date().toLocaleDateString('ru-RU')
         };
 
-        // 1. Локально добавляем для мгновенного отображения
         item.reviews = item.reviews || [];
         item.reviews.unshift(newReview);
         renderAll();
         closeModal(els.reviewModal);
         els.reviewForm.reset();
 
-        // 2. Отправляем на модерацию через EmailJS
         showSync('loading', '⏳ Отправка отзыва на модерацию...');
         try {
           await emailjs.send(EMAILJS_SERVICE_ID, EMAILJS_TEMPLATE_ID, {
@@ -444,15 +428,44 @@
         }
       };
 
-
-        renderAll(); closeModal(els.reviewModal); els.reviewForm.reset(); showSync('success', '✅ Отзыв опубликован!');
-      };
+      function openReviewsList(id) {
+        const item = catalogData.find(i => i.id === id);
+        if (!item || !item.reviews || !item.reviews.length) {
+          alert('📭 Отзывов пока нет. Будьте первым!');
+          return;
+        }
+        let html = `<h3 style="margin-bottom:1rem; color:var(--primary);">Отзывы о "${item.name}"</h3>`;
+        item.reviews.forEach(r => {
+          const stars = '★'.repeat(r.rating) + '☆'.repeat(5 - r.rating);
+          html += `
+            <div class="review-item">
+              <div class="review-header">
+                <span class="review-author">👤 ${r.author}</span>
+                <span class="review-date">📅 ${r.date}</span>
+              </div>
+              <div class="review-stars">${stars}</div>
+              <div class="review-text">${r.text}</div>
+            </div>
+          `;
+        });
+        
+        const tempModal = document.createElement('div');
+        tempModal.className = 'modal-overlay open';
+        tempModal.innerHTML = `
+          <div class="modal" style="max-width:500px;">
+            <button class="close-btn" onclick="this.closest('.modal-overlay').remove()">&times;</button>
+            ${html}
+          </div>
+        `;
+        document.body.appendChild(tempModal);
+        tempModal.addEventListener('click', e => { if(e.target === tempModal) tempModal.remove(); });
+      }
 
       els.searchBtn.onclick = () => { searchQuery=els.searchInput.value.toLowerCase(); renderGrid(); };
       els.searchInput.oninput = () => { searchQuery=els.searchInput.value.toLowerCase(); renderGrid(); };
       els.searchInput.onkeydown = e => { if(e.key==='Enter') { searchQuery=els.searchInput.value.toLowerCase(); renderGrid(); }};
 
-            async function loadDataFromGitHub() {
+      async function loadDataFromGitHub() {
         try {
           const res = await fetch('data.json', { cache: 'no-store' });
           if (res.ok) {
@@ -460,30 +473,21 @@
             if (Array.isArray(remoteData) && remoteData.length > 0) {
               catalogData = remoteData;
 
-              // === НОВОЕ: Автоматическое обновление списка рубрик и категорий ===
-              // 1. Находим все уникальные рубрики из загруженного файла
+              // Автообновление рубрик и категорий
               const uniqueRubrics = [...new Set(catalogData.map(item => item.rubric))];
-              
-              // 2. Проверяем, есть ли в конфиге новые рубрики
               let configUpdated = false;
               uniqueRubrics.forEach(rubric => {
                 if (!RUBRICS_CONFIG[rubric]) {
-                  // Если рубрики нет, создаем её и собираем все категории для неё из данных
                   const categoriesInRubric = [...new Set(catalogData
                     .filter(i => i.rubric === rubric)
                     .map(i => i.category))];
-                  
                   RUBRICS_CONFIG[rubric] = categoriesInRubric;
                   configUpdated = true;
                 }
               });
-
-              // 3. Если конфиг изменился, сохраняем в localStorage
               if (configUpdated) {
                 localStorage.setItem('sv_rubrics_config', JSON.stringify(RUBRICS_CONFIG));
               }
-              // ====================================================================
-
               renderAll();
             }
           }
@@ -491,7 +495,9 @@
           console.error('Ошибка загрузки с GitHub', e);
         }
       }
-      renderAll(); loadDataFromGitHub();
+
+      renderAll();
+      loadDataFromGitHub();
     });
   </script>
 </body>

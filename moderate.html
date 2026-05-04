@@ -12,7 +12,7 @@
     h1, h2 { font-family: 'Montserrat', sans-serif; margin-bottom: 1rem; }
     .card { background: var(--card); padding: 1.5rem; border-radius: 12px; box-shadow: 0 4px 12px rgba(0,0,0,0.08); margin-bottom: 1.5rem; border: 1px solid var(--border); }
     input, textarea, select { width: 100%; padding: 0.8rem; margin-bottom: 1rem; border: 1px solid var(--border); border-radius: 8px; font-family: inherit; }
-    button { background: var(--primary); color: white; border: none; padding: 0.8rem 1.5rem; border-radius: 8px; cursor: pointer; font-weight: 600; transition: 0.2s; }
+    button { background: var(--primary); color: white; border: none; padding: 0.8rem 1.5rem; border-radius: 8px; cursor: pointer; font-weight: 600; transition: 0.2s; margin-right: 0.5rem; }
     button:hover { background: #1e3d28; }
     .btn-sec { background: var(--secondary); } .btn-sec:hover { background: #b8895c; }
     .status { margin-top: 1rem; padding: 0.8rem; border-radius: 8px; font-weight: 600; display: none; }
@@ -20,14 +20,14 @@
     .preview-table { width: 100%; border-collapse: collapse; margin: 1rem 0; font-size: 0.9rem; }
     .preview-table th, .preview-table td { border: 1px solid var(--border); padding: 0.5rem; text-align: left; }
     .preview-table th { background: #f1f5f0; }
-    .actions { display: flex; gap: 1rem; margin-top: 1rem; }
+    .actions { display: flex; gap: 1rem; margin-top: 1rem; flex-wrap: wrap; }
     #dropArea { border: 2px dashed var(--border); padding: 2rem; text-align: center; border-radius: 8px; cursor: pointer; transition: 0.2s; }
     #dropArea:hover { background: #f9f9f9; border-color: var(--primary); }
   </style>
 </head>
 <body>
   <h1>🔧 Админ-панель SmartVille</h1>
-  <p style="margin-bottom: 2rem; color: #666;">Загрузите JSON-файл с заявками или вставьте контакты вручную, затем опубликуйте в GitHub.</p>
+  <p style="margin-bottom: 2rem; color: #666;">Загрузите JSON-файл с заявками (контакты или отзывы) и опубликуйте в GitHub.</p>
 
   <div class="card">
     <h2>1. Настройки GitHub</h2>
@@ -59,9 +59,19 @@
 
   <script>
     let newData = [];
-    const els = { gh_owner: document.getElementById('gh_owner'), gh_repo: document.getElementById('gh_repo'), gh_branch: document.getElementById('gh_branch'), gh_token: document.getElementById('gh_token'), fileInput: document.getElementById('fileInput'), dropArea: document.getElementById('dropArea'), rawData: document.getElementById('rawData'), previewCard: document.getElementById('previewCard'), previewTable: document.getElementById('previewTable'), status: document.getElementById('status') };
+    const els = { 
+      gh_owner: document.getElementById('gh_owner'), 
+      gh_repo: document.getElementById('gh_repo'), 
+      gh_branch: document.getElementById('gh_branch'), 
+      gh_token: document.getElementById('gh_token'), 
+      fileInput: document.getElementById('fileInput'), 
+      dropArea: document.getElementById('dropArea'), 
+      rawData: document.getElementById('rawData'), 
+      previewCard: document.getElementById('previewCard'), 
+      previewTable: document.getElementById('previewTable'), 
+      status: document.getElementById('status') 
+    };
 
-    // Загрузка сохраненных настроек
     ['gh_owner','gh_repo','gh_branch','gh_token'].forEach(id => { const v = localStorage.getItem(id); if(v) els[id].value = v; });
 
     function saveGhSettings() {
@@ -81,120 +91,130 @@
       try {
         let parsed = JSON.parse(els.rawData.value);
         if(!Array.isArray(parsed)) parsed = [parsed];
-        newData = parsed.filter(i => i.name && i.phone);
-        if(!newData.length) throw new Error('Нет валидных контактов');
+        newData = parsed;
+        if(!newData.length) throw new Error('Нет валидных данных');
         renderPreview();
       } catch(e) { showStatus('error', '❌ Ошибка формата JSON: ' + e.message); }
     }
 
     function renderPreview() {
       els.previewCard.style.display = 'block';
-      let html = '<table class="preview-table"><tr><th>Имя</th><th>Компания</th><th>Телефон</th><th>Рубрика</th><th>Категория</th></tr>';
-      newData.forEach(i => html += `<tr><td>${i.name}</td><td>${i.company||'-'}</td><td>${i.phone}</td><td>${i.rubric}</td><td>${i.category}</td></tr>`);
+      let html = '<table class="preview-table"><tr><th>Тип</th><th>Имя/Название</th><th>Компания</th><th>Телефон</th><th>Рубрика</th><th>Категория</th></tr>';
+      newData.forEach(i => {
+        const type = i.type === 'review' ? '📝 Отзыв' : '📞 Контакт';
+        const name = i.type === 'review' ? `Отзыв на #${i.masterId}` : i.name;
+        const rubric = i.type === 'review' ? '-' : i.rubric;
+        const category = i.type === 'review' ? '-' : i.category;
+        html += `<tr><td>${type}</td><td>${name}</td><td>${i.company||'-'}</td><td>${i.phone||'-'}</td><td>${rubric}</td><td>${category}</td></tr>`;
+      });
       html += '</table>';
       els.previewTable.innerHTML = html;
     }
 
     function clearData() { els.rawData.value = ''; newData = []; els.previewCard.style.display = 'none'; }
 
-
-async function publishToGitHub() {
-  const owner = els.gh_owner.value.trim();
-  const repo = els.gh_repo.value.trim();
-  const branch = els.gh_branch.value.trim();
-  const token = els.gh_token.value.trim();
-  
-  if(!owner || !repo || !token) { 
-    showStatus('error', '❌ Заполните настройки GitHub'); 
-    return; 
-  }
-  
-  showStatus('loading', '⏳ Загрузка текущей базы и публикация...');
-
-  const url = `https://api.github.com/repos/${owner}/${repo}/contents/data.json?ref=${branch}`;
-  const headers = { 
-    Authorization: `token ${token}`, 
-    Accept: 'application/vnd.github.v3+json'
-  };
-  
-  try {
-    let sha = null;
-    let currentData = [];
-    
-    // 1. Получаем текущий файл
-    const getRes = await fetch(url, { headers });
-    if(getRes.ok) {
-      const file = await getRes.json();
-      sha = file.sha;
+    async function publishToGitHub() {
+      const owner = els.gh_owner.value.trim();
+      const repo = els.gh_repo.value.trim();
+      const branch = els.gh_branch.value.trim();
+      const token = els.gh_token.value.trim();
       
-      // 🔧 Декодируем base64 → UTF-8 (ПРОВЕРЕННЫЙ МЕТОД)
-      const jsonString = decodeURIComponent(escape(atob(file.content)));
-      currentData = JSON.parse(jsonString);
-      
-      console.log('✅ Загружено контактов:', currentData.length);
-    }
-
-    // 2. Объединяем данные
-    const existingIds = new Set(currentData.map(i => i.id));
-    let merged = [...currentData];
-    
-    newData.forEach(item => {
-      // Если это отзыв (type: 'review')
-      if (item.type === 'review') {
-        const master = merged.find(m => m.id === item.masterId);
-        if (master) {
-          master.reviews = master.reviews || [];
-          // Проверяем дубликаты отзывов
-          const exists = master.reviews.some(r => r.text === item.review.text && r.author === item.review.author);
-          if (!exists) master.reviews.unshift(item.review);
-        }
-      } 
-      // Если это новый контакт
-      else if (!existingIds.has(item.id)) {
-        item.id = Date.now() + Math.floor(Math.random() * 10000);
-        item.reviews = item.reviews || [];
-        merged.unshift(item);
+      if(!owner || !repo || !token) { 
+        showStatus('error', '❌ Заполните настройки GitHub'); 
+        return; 
       }
-    });
+      
+      showStatus('loading', '⏳ Загрузка текущей базы и публикация...');
 
-    // 3. 🔧 Кодируем UTF-8 → base64 (ПРОВЕРЕННЫЙ МЕТОД)
-    const jsonString = JSON.stringify(merged, null, 2);
-    console.log('📝 Исходный JSON (первые 100 символов):', jsonString.substring(0, 100));
-    
-    const base64Content = btoa(unescape(encodeURIComponent(jsonString)));
-    console.log('✅ Закодировано в base64, длина:', base64Content.length);
+      const url = `https://api.github.com/repos/${owner}/${repo}/contents/data.json?ref=${branch}`;
+      const headers = { 
+        Authorization: `token ${token}`, 
+        Accept: 'application/vnd.github.v3+json'
+      };
+      
+      try {
+        let sha = null;
+        let currentData = [];
+        
+        // 1. Получаем текущий файл
+        const getRes = await fetch(url, { headers });
+        if(getRes.ok) {
+          const file = await getRes.json();
+          sha = file.sha;
+          
+          // Декодируем base64 → UTF-8
+          const jsonString = decodeURIComponent(escape(atob(file.content)));
+          currentData = JSON.parse(jsonString);
+          
+          console.log('✅ Загружено контактов:', currentData.length);
+        }
 
-    const payload = {
-      message: `📝 Модерация: добавлено ${newData.length} контактов (${new Date().toLocaleDateString('ru-RU')})`,
-      content: base64Content,
-      branch: branch
-    };
-    
-    if(sha) payload.sha = sha;
+        // 2. Объединяем данные
+        const existingIds = new Set(currentData.map(i => i.id));
+        let merged = [...currentData];
+        
+        newData.forEach(item => {
+          // Если это отзыв (type: 'review')
+          if (item.type === 'review') {
+            const master = merged.find(m => m.id === item.masterId);
+            if (master) {
+              master.reviews = master.reviews || [];
+              // Проверяем дубликаты отзывов
+              const exists = master.reviews.some(r => r.text === item.review.text && r.author === item.review.author);
+              if (!exists) {
+                master.reviews.unshift(item.review);
+                console.log('✅ Добавлен отзыв для', master.name);
+              }
+            }
+          } 
+          // Если это новый контакт
+          else if (!existingIds.has(item.id)) {
+            item.id = Date.now() + Math.floor(Math.random() * 10000);
+            item.reviews = item.reviews || [];
+            merged.unshift(item);
+            console.log('✅ Добавлен контакт:', item.name);
+          }
+        });
 
-    const putRes = await fetch(url, { 
-      method: 'PUT', 
-      headers: headers, 
-      body: JSON.stringify(payload) 
-    });
-    
-    if(!putRes.ok) {
-      const errorData = await putRes.json();
-      throw new Error(errorData.message || 'Ошибка коммита');
+        // 3. Кодируем UTF-8 → base64
+        const jsonString = JSON.stringify(merged, null, 2);
+        console.log('📝 Исходный JSON (первые 100 символов):', jsonString.substring(0, 100));
+        
+        const base64Content = btoa(unescape(encodeURIComponent(jsonString)));
+        console.log('✅ Закодировано в base64, длина:', base64Content.length);
+
+        const payload = {
+          message: `📝 Модерация: добавлено ${newData.length} записей (${new Date().toLocaleDateString('ru-RU')})`,
+          content: base64Content,
+          branch: branch
+        };
+        
+        if(sha) payload.sha = sha;
+
+        const putRes = await fetch(url, { 
+          method: 'PUT', 
+          headers: headers, 
+          body: JSON.stringify(payload) 
+        });
+        
+        if(!putRes.ok) {
+          const errorData = await putRes.json();
+          throw new Error(errorData.message || 'Ошибка коммита');
+        }
+        
+        showStatus('success', `✅ Успешно опубликовано ${newData.length} записей!`);
+        clearData();
+        
+      } catch(e) { 
+        console.error('❌ Ошибка:', e);
+        showStatus('error', '❌ Ошибка: ' + e.message); 
+      }
     }
-    
-    showStatus('success', `✅ Успешно опубликовано ${newData.length} контактов!`);
-    clearData();
-    
-  } catch(e) { 
-    console.error('❌ Ошибка:', e);
-    showStatus('error', '❌ Ошибка: ' + e.message); 
-  }
-}
-
 
     function showStatus(type, msg) {
-      els.status.className = `status ${type}`; els.status.textContent = msg; els.status.style.display = 'block';
+      els.status.className = `status ${type}`; 
+      els.status.textContent = msg; 
+      els.status.style.display = 'block';
       setTimeout(() => els.status.style.display = 'none', 5000);
     }
   </script>
