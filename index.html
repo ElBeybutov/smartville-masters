@@ -162,6 +162,19 @@
       .btn-add { bottom: 1.5rem; right: 1.5rem; padding: 0.8rem 1.5rem; }
       .sync-status { left: 1rem; bottom: 1rem; }
     }
+
+    /* Кнопка поделиться */
+    .share-btn { background: none; border: none; color: var(--primary-light); cursor: pointer; font-size: 0.8rem; padding: 0 0.5rem; font-weight: 600; transition: 0.2s; }
+    .share-btn:hover { text-decoration: underline; color: var(--primary); }
+    
+    /* Анимация подсветки */
+    .highlight-contact { animation: highlight-pulse 3s ease-in-out; border: 2px solid var(--primary) !important; }
+    @keyframes highlight-pulse { 
+      0% { box-shadow: 0 0 0 0 rgba(45, 90, 61, 0.7); transform: scale(1); } 
+      10% { box-shadow: 0 0 0 10px rgba(45, 90, 61, 0); transform: scale(1.02); } 
+      100% { box-shadow: 0 0 0 0 rgba(45, 90, 61, 0); transform: scale(1); } 
+    }
+
   </style>
 </head>
 <body>
@@ -271,7 +284,55 @@
       function showSync(status, msg) { els.syncStatus.className = `sync-status show ${status}`; els.syncStatus.textContent = msg; setTimeout(() => els.syncStatus.classList.remove('show'), 4000); }
 
       function formatPhone(val) { let d = val.replace(/\D/g, ''); if (d.startsWith('8')) d = '7' + d.slice(1); if (d.length === 10) d = '7' + d; if (d.length === 11 && d.startsWith('7')) return `+7(${d.slice(1,4)})${d.slice(4,7)}-${d.slice(7,9)}-${d.slice(9)}`; return val; }
-      els.f_phone.addEventListener('blur', e => { e.target.value = formatPhone(e.target.value); });
+      els.f_phone.addEventListener('blur', e => { e.target.value = formatPhone(e.target.value);
+    // Функция для кнопки "Поделиться"
+    window.shareContact = function(id) {
+      // Формируем ссылку с ID контакта
+      const contactUrl = `${window.location.origin}${window.location.pathname}?id=${id}`;
+      
+      // Находим имя контакта для текста сообщения
+      const item = catalogData.find(i => i.id === id);
+      const name = item ? item.name : 'Контакт';
+
+      // Если есть Web Share API (мобильные телефоны), открываем системное меню
+      if (navigator.share) {
+        navigator.share({
+          title: `Контакт: ${name}`,
+          text: `Посмотри этого специалиста в каталоге SmartVille:`,
+          url: contactUrl
+        }).catch(console.error);
+      } else {
+        // На компьютере просто копируем ссылку
+        navigator.clipboard.writeText(contactUrl).then(() => {
+          alert(`🔗 Ссылка на "${name}" скопирована!\nОтправь её соседу в чат.`);
+        }).catch(err => {
+          console.error('Ошибка копирования', err);
+          prompt('Скопируйте ссылку вручную:', contactUrl);
+        });
+      }
+    };
+
+    // Функция проверки URL при загрузке страницы
+    function checkUrlParams() {
+      const urlParams = new URLSearchParams(window.location.search);
+      const contactId = urlParams.get('id');
+      
+      if (contactId) {
+        // Ищем карточку с таким ID
+        const card = document.querySelector(`.card[data-id="${contactId}"]`);
+        if (card) {
+          // Ждем немного, чтобы рендер закончился
+          setTimeout(() => {
+            card.scrollIntoView({ behavior: 'smooth', block: 'center' });
+            card.classList.add('highlight-contact');
+            
+            // Убираем подсветку через 3 секунды
+            setTimeout(() => card.classList.remove('highlight-contact'), 3500);
+          }, 100);
+        }
+      }
+    }
+ });
 
       function renderAll() { renderStats(); renderRubrics(); renderCategories(); renderGrid(); }
       
@@ -321,7 +382,11 @@
         filtered.forEach(item => {
           const { avg, count } = calcRating(item.reviews);
           const stars = avg > 0 ? '★'.repeat(Math.round(avg)) + '☆'.repeat(5-Math.round(avg)) : '☆☆☆☆☆';
-          const card = document.createElement('div'); card.className = 'card';
+          
+	  const card = document.createElement('div'); 
+	  card.className = 'card'; 
+	  card.dataset.id = item.id; // ВАЖНО: Добавляем ID карточке для поиска
+
           let phonesHtml = '';
           if(item.phone) item.phone.split(',').map(p=>p.trim()).forEach(p=>{ phonesHtml += `<a href="tel:${p.replace(/\D/g,'')}" class="phone-btn">📞 ${p}</a> `; });
           const webHtml = item.web ? `<a href="${item.web}" target="_blank" class="site-link">🌐 Перейти</a>` : '';
@@ -336,6 +401,7 @@
               <div style="display:flex; gap:0.8rem;">
                 <button class="reviews-list-btn" data-id="${item.id}">📖 Отзывы (${count})</button>
                 <button class="review-btn" data-id="${item.id}">✍️ Оставить отзыв</button>
+		<button class="share-btn" onclick="shareContact(${item.id})">🔗 Поделиться</button>
               </div>
             </div>`;
           frag.appendChild(card);
@@ -515,6 +581,14 @@
           }
         } catch (e) { console.error('Ошибка загрузки data.json:', e); }
         renderAll();
+	      async function loadData() {
+        try {
+           // ... ваш код загрузки ...
+           renderAll();
+           checkUrlParams(); // <--- ДОБАВИТЬ ЭТУ СТРОКУ
+        }
+        // ...
+      }
       }
 
       loadData();
