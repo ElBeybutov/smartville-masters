@@ -341,12 +341,48 @@
         } catch (e) { return false; }
       }
 
-      els.addForm.onsubmit = async e => {
+        els.addForm.onsubmit = async e => {
         e.preventDefault();
-        const newItem = { id: Date.now(), rubric: els.f_rubric.value.trim(), category: els.f_cat.value.trim(), name: els.f_name.value.trim(), company: els.f_company.value.trim(), phone: formatPhone(els.f_phone.value.trim()), desc: els.f_desc.value.trim(), price: els.f_price.value.trim(), web: els.f_web.value.trim(), author: els.f_author.value.trim(), reviews: [] };
+        
+        // 1. Проверка токенов перед отправкой
+        if (TG_CONFIG.token === '8456078051:AAHnalIHLE7m96-U6wV_Wb5tNHWihVkO58c' || TG_CONFIG.chatId === '165557958') {
+          alert('⚠️ Ошибка настройки:\nВставьте реальные TOKEN и CHAT_ID в начало скрипта (строка ~290).');
+          console.error('❌ TG_CONFIG не настроен. Заполните token и chatId.');
+          return;
+        }
+
+        // 2. Сбор данных
+        const newItem = { 
+          id: Date.now(), 
+          rubric: els.f_rubric.value.trim(), 
+          category: els.f_cat.value.trim(), 
+          name: els.f_name.value.trim(), 
+          company: els.f_company.value.trim(), 
+          phone: formatPhone(els.f_phone.value.trim()), 
+          desc: els.f_desc.value.trim(), 
+          price: els.f_price.value.trim(), 
+          web: els.f_web.value.trim(), 
+          author: els.f_author.value.trim(), 
+          reviews: [] 
+        };
+
+        console.log('📤 Отправка данных в Telegram:', newItem);
         showSync('loading', '⏳ Отправка заявки...');
-        const sent = await sendTelegramNotification(newItem, false);
-        if (sent) { showSync('success', '✅ Заявка отправлена!'); closeModal(els.addModal); els.addForm.reset(); } else { showSync('error', '❌ Ошибка отправки.'); }
+
+        try {
+          const sent = await sendTelegramNotification(newItem, false);
+          if (sent) {
+            showSync('success', '✅ Заявка успешно отправлена администратору!');
+            setTimeout(() => closeModal(els.addModal), 1500);
+            els.addForm.reset();
+          } else {
+            showSync('error', '❌ Не удалось отправить. Проверьте консоль (F12).');
+            console.error('❌ Telegram API вернул ошибку. Проверьте токен или интернет.');
+          }
+        } catch (err) {
+          console.error('🚨 Критическая ошибка отправки:', err);
+          showSync('error', '❌ Ошибка сети или скрипта.');
+        }
       };
 
       function updateStarsUI(val) { els.starPicker.querySelectorAll('span').forEach(st => st.classList.toggle('active', parseInt(st.dataset.v) <= val)); }
