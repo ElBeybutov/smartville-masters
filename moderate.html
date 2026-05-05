@@ -6,28 +6,42 @@
   <title>SmartVille — Админ-панель</title>
   <link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@500;600;700&family=Open+Sans:wght@400;600&display=swap" rel="stylesheet">
   <style>
-    :root { --primary: #2d5a3d; --secondary: #d4a574; --bg: #f7f5ee; --card: #fff; --border: #e0d5c1; --text: #2c3e2d; }
+    :root { --primary: #2d5a3d; --secondary: #d4a574; --bg: #f7f5ee; --card: #fff; --border: #e0d5c1; --text: #2c3e2d; --danger: #dc2626; --success: #059669; }
     * { box-sizing: border-box; margin: 0; padding: 0; }
-    body { font-family: 'Open Sans', sans-serif; background: var(--bg); color: var(--text); padding: 2rem; max-width: 800px; margin: 0 auto; }
-    h1, h2 { font-family: 'Montserrat', sans-serif; margin-bottom: 1rem; }
+    body { font-family: 'Open Sans', sans-serif; background: var(--bg); color: var(--text); padding: 2rem; max-width: 1200px; margin: 0 auto; }
+    h1, h2, h3 { font-family: 'Montserrat', sans-serif; margin-bottom: 1rem; }
     .card { background: var(--card); padding: 1.5rem; border-radius: 12px; box-shadow: 0 4px 12px rgba(0,0,0,0.08); margin-bottom: 1.5rem; border: 1px solid var(--border); }
     input, textarea, select { width: 100%; padding: 0.8rem; margin-bottom: 1rem; border: 1px solid var(--border); border-radius: 8px; font-family: inherit; }
-    button { background: var(--primary); color: white; border: none; padding: 0.8rem 1.5rem; border-radius: 8px; cursor: pointer; font-weight: 600; transition: 0.2s; margin-right: 0.5rem; }
+    button { background: var(--primary); color: white; border: none; padding: 0.8rem 1.5rem; border-radius: 8px; cursor: pointer; font-weight: 600; transition: 0.2s; margin-right: 0.5rem; margin-bottom: 0.5rem; }
     button:hover { background: #1e3d28; }
     .btn-sec { background: var(--secondary); } .btn-sec:hover { background: #b8895c; }
+    .btn-danger { background: var(--danger); } .btn-danger:hover { background: #b91c1c; }
+    .btn-success { background: var(--success); } .btn-success:hover { background: #047857; }
     .status { margin-top: 1rem; padding: 0.8rem; border-radius: 8px; font-weight: 600; display: none; }
     .status.success { background: #d4edda; color: #155724; } .status.error { background: #f8d7da; color: #721c24; } .status.loading { background: #fff3cd; color: #856404; }
-    .preview-table { width: 100%; border-collapse: collapse; margin: 1rem 0; font-size: 0.9rem; }
-    .preview-table th, .preview-table td { border: 1px solid var(--border); padding: 0.5rem; text-align: left; }
-    .preview-table th { background: #f1f5f0; }
-    .actions { display: flex; gap: 1rem; margin-top: 1rem; flex-wrap: wrap; }
+    .contacts-table { width: 100%; border-collapse: collapse; margin: 1rem 0; font-size: 0.9rem; }
+    .contacts-table th, .contacts-table td { border: 1px solid var(--border); padding: 0.8rem; text-align: left; }
+    .contacts-table th { background: #f1f5f0; font-weight: 600; }
+    .contacts-table tr:hover { background: #f9f9f9; }
+    .actions { display: flex; gap: 0.5rem; flex-wrap: wrap; }
     #dropArea { border: 2px dashed var(--border); padding: 2rem; text-align: center; border-radius: 8px; cursor: pointer; transition: 0.2s; }
     #dropArea:hover { background: #f9f9f9; border-color: var(--primary); }
+    .search-box { display: flex; gap: 0.5rem; margin-bottom: 1rem; }
+    .search-box input { margin-bottom: 0; flex: 1; }
+    .edit-form { display: none; }
+    .edit-form.active { display: block; }
+    .badge { display: inline-block; padding: 0.25rem 0.6rem; border-radius: 12px; font-size: 0.75rem; font-weight: 600; background: var(--secondary); color: white; }
+    .review-count { color: var(--text-light); font-size: 0.85rem; }
+    @media (max-width: 768px) {
+      .contacts-table { font-size: 0.8rem; }
+      .contacts-table th, .contacts-table td { padding: 0.5rem; }
+      body { padding: 1rem; }
+    }
   </style>
 </head>
 <body>
   <h1>🔧 Админ-панель SmartVille</h1>
-  <p style="margin-bottom: 2rem; color: #666;">Загрузите JSON-файл с заявками (контакты или отзывы) и опубликуйте в GitHub.</p>
+  <p style="margin-bottom: 2rem; color: #666;">Управление контактами: добавление, редактирование, удаление</p>
 
   <div class="card">
     <h2>1. Настройки GitHub</h2>
@@ -39,15 +53,60 @@
   </div>
 
   <div class="card">
-    <h2>2. Данные для добавления</h2>
-    <div id="dropArea">📁 Перетащите файл .json сюда или нажмите для загрузки</div>
+    <h2>2. Загрузка и управление данными</h2>
+    <div class="search-box">
+      <input type="text" id="searchContact" placeholder="🔍 Поиск по ID, имени, телефону или рубрике...">
+      <button onclick="searchContacts()" class="btn-sec">Найти</button>
+      <button onclick="loadAllContacts()" class="btn-sec">Показать все</button>
+    </div>
+    <div id="contactsList"></div>
+  </div>
+
+  <div class="card">
+    <h2>3. Добавить новый контакт</h2>
+    <div id="dropArea" onclick="document.getElementById('fileInput').click()">📁 Перетащите файл .json сюда или нажмите для загрузки</div>
     <input type="file" id="fileInput" accept=".json" style="display:none">
-    <textarea id="rawData" placeholder='Или вставьте JSON вручную (массив объектов или одиночный объект):' rows="8"></textarea>
+    <textarea id="rawData" placeholder='Или вставьте JSON вручную (массив объектов или одиночный объект):' rows="6"></textarea>
     <button onclick="parseData()">🔍 Предпросмотр данных</button>
   </div>
 
+  <div class="card edit-form" id="editCard">
+    <h2>✏️ Редактирование контакта #<span id="editId"></span></h2>
+    <form id="editForm">
+      <input type="hidden" id="edit_contact_id">
+      <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 1rem;">
+        <div>
+          <label>Рубрика</label>
+          <input type="text" id="edit_rubric" required>
+        </div>
+        <div>
+          <label>Категория</label>
+          <input type="text" id="edit_category" required>
+        </div>
+      </div>
+      <label>Наименование услуги</label>
+      <input type="text" id="edit_name" required>
+      <label>Имя / Компания</label>
+      <input type="text" id="edit_company">
+      <label>Телефон</label>
+      <input type="text" id="edit_phone">
+      <label>Описание</label>
+      <textarea id="edit_desc" rows="3"></textarea>
+      <label>Цена</label>
+      <input type="text" id="edit_price">
+      <label>Сайт</label>
+      <input type="url" id="edit_web">
+      <label>Автор</label>
+      <input type="text" id="edit_author">
+      <div class="actions">
+        <button type="button" onclick="saveEdit()" class="btn-success">💾 Сохранить изменения</button>
+        <button type="button" onclick="cancelEdit()" class="btn-sec">❌ Отмена</button>
+      </div>
+    </form>
+  </div>
+
   <div class="card" id="previewCard" style="display:none;">
-    <h2>3. Предпросмотр</h2>
+    <h2>4. Предпросмотр новых данных</h2>
     <div id="previewTable"></div>
     <div class="actions">
       <button class="btn-sec" onclick="clearData()">❌ Очистить</button>
@@ -59,25 +118,21 @@
 
   <script>
     let newData = [];
-    
-    // Инициализация элементов DOM
+    let allContacts = [];
+    let editingId = null;
+
     const els = { 
-      gh_owner: document.getElementById('gh_owner'), 
-      gh_repo: document.getElementById('gh_repo'), 
-      gh_branch: document.getElementById('gh_branch'), 
-      gh_token: document.getElementById('gh_token'), 
-      fileInput: document.getElementById('fileInput'), 
-      dropArea: document.getElementById('dropArea'), 
-      rawData: document.getElementById('rawData'), 
-      previewCard: document.getElementById('previewCard'), 
-      previewTable: document.getElementById('previewTable'), 
-      status: document.getElementById('status') 
+      gh_owner: document.getElementById('gh_owner'), gh_repo: document.getElementById('gh_repo'), 
+      gh_branch: document.getElementById('gh_branch'), gh_token: document.getElementById('gh_token'), 
+      fileInput: document.getElementById('fileInput'), dropArea: document.getElementById('dropArea'), 
+      rawData: document.getElementById('rawData'), previewCard: document.getElementById('previewCard'), 
+      previewTable: document.getElementById('previewTable'), status: document.getElementById('status'),
+      contactsList: document.getElementById('contactsList'), searchContact: document.getElementById('searchContact'),
+      editCard: document.getElementById('editCard'), editForm: document.getElementById('editForm')
     };
 
-    // Загрузка сохранённых настроек
     ['gh_owner','gh_repo','gh_branch','gh_token'].forEach(id => { 
-      const v = localStorage.getItem(id); 
-      if(v) els[id].value = v; 
+      const v = localStorage.getItem(id); if(v) els[id].value = v; 
     });
 
     function saveGhSettings() {
@@ -85,7 +140,6 @@
       showStatus('success', '✅ Настройки сохранены');
     }
 
-    // Drag & Drop / Click
     els.dropArea.onclick = () => els.fileInput.click();
     els.fileInput.onchange = e => {
       const file = e.target.files[0];
@@ -95,7 +149,211 @@
       reader.readAsText(file);
     };
 
-    // Парсинг и предпросмотр
+    async function loadAllContacts() {
+      const owner = els.gh_owner.value.trim();
+      const repo = els.gh_repo.value.trim();
+      const branch = els.gh_branch.value.trim();
+      const token = els.gh_token.value.trim();
+
+      if(!owner || !repo || !token) { showStatus('error', '❌ Заполните настройки GitHub'); return; }
+      
+      showStatus('loading', '⏳ Загрузка контактов...');
+      
+      try {
+        const url = `https://api.github.com/repos/${owner}/${repo}/contents/data.json?ref=${branch}`;
+        const headers = { Authorization: `token ${token}`, Accept: 'application/vnd.github.v3+json' };
+        const res = await fetch(url, { headers });
+        
+        if(res.ok) {
+          const file = await res.json();
+          const binary = atob(file.content);
+          const bytes = Uint8Array.from(binary, c => c.charCodeAt(0));
+          allContacts = JSON.parse(new TextDecoder('utf-8').decode(bytes));
+          displayContacts(allContacts);
+          showStatus('success', `✅ Загружено ${allContacts.length} контактов`);
+        } else {
+          showStatus('error', '❌ Ошибка загрузки');
+        }
+      } catch(e) {
+        console.error(e);
+        showStatus('error', '❌ Ошибка: ' + e.message);
+      }
+    }
+
+    function searchContacts() {
+      const query = els.searchContact.value.toLowerCase().trim();
+      if(!query) { displayContacts(allContacts); return; }
+      
+      const filtered = allContacts.filter(c => 
+        (c.id && c.id.toString().includes(query)) ||
+        (c.name && c.name.toLowerCase().includes(query)) ||
+        (c.phone && c.phone.toLowerCase().includes(query)) ||
+        (c.rubric && c.rubric.toLowerCase().includes(query)) ||
+        (c.category && c.category.toLowerCase().includes(query))
+      );
+      
+      displayContacts(filtered);
+      showStatus('success', `✅ Найдено ${filtered.length} контактов`);
+    }
+
+    function displayContacts(contacts) {
+      if(!contacts.length) {
+        els.contactsList.innerHTML = '<p style="color: var(--text-light); text-align: center;">Контакты не найдены</p>';
+        return;
+      }
+
+      let html = '<table class="contacts-table"><thead><tr><th>ID</th><th>Название</th><th>Компания</th><th>Рубрика</th><th>Категория</th><th>Телефон</th><th>Действия</th></tr></thead><tbody>';
+      
+      contacts.forEach(c => {
+        const reviewCount = c.reviews ? c.reviews.length : 0;
+        html += `<tr>
+          <td><span class="badge">${c.id}</span></td>
+          <td><strong>${c.name || '-'}</strong><br><span class="review-count">📝 Отзывов: ${reviewCount}</span></td>
+          <td>${c.company || '-'}</td>
+          <td>${c.rubric || '-'}</td>
+          <td>${c.category || '-'}</td>
+          <td>${c.phone || '-'}</td>
+          <td class="actions">
+            <button onclick="editContact(${c.id})" class="btn-sec">✏️ Редактировать</button>
+            <button onclick="deleteContact(${c.id})" class="btn-danger">🗑️ Удалить</button>
+            <button onclick="copyLink(${c.id})" class="btn-sec">🔗 Ссылка</button>
+          </td>
+        </tr>`;
+      });
+      
+      html += '</tbody></table>';
+      els.contactsList.innerHTML = html;
+    }
+
+    function editContact(id) {
+      const contact = allContacts.find(c => c.id === id);
+      if(!contact) return;
+      
+      editingId = id;
+      document.getElementById('edit_contact_id').value = contact.id;
+      document.getElementById('edit_rubric').value = contact.rubric || '';
+      document.getElementById('edit_category').value = contact.category || '';
+      document.getElementById('edit_name').value = contact.name || '';
+      document.getElementById('edit_company').value = contact.company || '';
+      document.getElementById('edit_phone').value = contact.phone || '';
+      document.getElementById('edit_desc').value = contact.desc || '';
+      document.getElementById('edit_price').value = contact.price || '';
+      document.getElementById('edit_web').value = contact.web || '';
+      document.getElementById('edit_author').value = contact.author || '';
+      
+      els.editCard.classList.add('active');
+      els.editCard.scrollIntoView({ behavior: 'smooth' });
+    }
+
+    async function saveEdit() {
+      if(!editingId) return;
+      
+      const owner = els.gh_owner.value.trim();
+      const repo = els.gh_repo.value.trim();
+      const branch = els.gh_branch.value.trim();
+      const token = els.gh_token.value.trim();
+
+      const updatedContact = {
+        id: parseInt(document.getElementById('edit_contact_id').value),
+        rubric: document.getElementById('edit_rubric').value.trim(),
+        category: document.getElementById('edit_category').value.trim(),
+        name: document.getElementById('edit_name').value.trim(),
+        company: document.getElementById('edit_company').value.trim(),
+        phone: document.getElementById('edit_phone').value.trim(),
+        desc: document.getElementById('edit_desc').value.trim(),
+        price: document.getElementById('edit_price').value.trim(),
+        web: document.getElementById('edit_web').value.trim(),
+        author: document.getElementById('edit_author').value.trim(),
+        reviews: allContacts.find(c => c.id === editingId)?.reviews || []
+      };
+
+      const index = allContacts.findIndex(c => c.id === editingId);
+      if(index !== -1) {
+        allContacts[index] = updatedContact;
+      }
+
+      showStatus('loading', '⏳ Сохранение изменений...');
+      
+      try {
+        await publishDataToGitHub(allContacts, `✏️ Обновлено: ${updatedContact.name}`);
+        showStatus('success', '✅ Изменения сохранены');
+        cancelEdit();
+        displayContacts(allContacts);
+      } catch(e) {
+        showStatus('error', '❌ Ошибка сохранения: ' + e.message);
+      }
+    }
+
+    function cancelEdit() {
+      editingId = null;
+      els.editCard.classList.remove('active');
+      els.editForm.reset();
+    }
+
+    async function deleteContact(id) {
+      if(!confirm(`⚠️ Вы уверены, что хотите удалить контакт #${id}?`)) return;
+      
+      const owner = els.gh_owner.value.trim();
+      const repo = els.gh_repo.value.trim();
+      const branch = els.gh_branch.value.trim();
+      const token = els.gh_token.value.trim();
+
+      allContacts = allContacts.filter(c => c.id !== id);
+      
+      showStatus('loading', '⏳ Удаление...');
+      
+      try {
+        await publishDataToGitHub(allContacts, `🗑️ Удален контакт #${id}`);
+        showStatus('success', '✅ Контакт удален');
+        displayContacts(allContacts);
+      } catch(e) {
+        showStatus('error', '❌ Ошибка удаления: ' + e.message);
+        // Откат изменения при ошибке
+        location.reload();
+      }
+    }
+
+    function copyLink(id) {
+      const url = `${window.location.origin}/smartville-masters/?id=${id}`;
+      navigator.clipboard.writeText(url).then(() => {
+        showStatus('success', `🔗 Ссылка скопирована: ${url}`);
+      });
+    }
+
+    async function publishDataToGitHub(data, commitMessage) {
+      const owner = els.gh_owner.value.trim();
+      const repo = els.gh_repo.value.trim();
+      const branch = els.gh_branch.value.trim();
+      const token = els.gh_token.value.trim();
+
+      const url = `https://api.github.com/repos/${owner}/${repo}/contents/data.json?ref=${branch}`;
+      const headers = { Authorization: `token ${token}`, Accept: 'application/vnd.github.v3+json' };
+
+      // Получаем текущий SHA
+      const getRes = await fetch(url, { headers });
+      let sha = null;
+      if(getRes.ok) {
+        const file = await getRes.json();
+        sha = file.sha;
+      }
+
+      const jsonString = JSON.stringify(data, null, 2);
+      const encoder = new TextEncoder();
+      const utf8Bytes = encoder.encode(jsonString);
+      let binary = '';
+      utf8Bytes.forEach(b => binary += String.fromCharCode(b));
+      
+      const payload = {
+        message: commitMessage || '📝 Обновление данных',
+        content: btoa(binary),
+        branch: branch
+      };
+      if(sha) payload.sha = sha;
+
+      const putRes = await fetch(url, { method: 'PUT', headers, body: JSON.stringify(payload) });
+      if(!putRes.ok) throw new Error((await putRes.json()).message || 'Ошибка коммита');
+    }
+
     function parseData() {
       try {
         let parsed = JSON.parse(els.rawData.value);
@@ -104,13 +362,11 @@
         if(!newData.length) throw new Error('Нет валидных данных');
         renderPreview();
         els.previewCard.style.display = 'block';
-      } catch(e) {
-        showStatus('error', '❌ Ошибка формата JSON: ' + e.message);
-      }
+      } catch(e) { showStatus('error', '❌ Ошибка формата JSON: ' + e.message); }
     }
 
     function renderPreview() {
-      let html = '<table class="preview-table"><tr><th>Тип</th><th>Название/Мастер</th><th>Компания/Автор</th><th>Телефон</th><th>Рубрика</th></tr>';
+      let html = '<table class="contacts-table"><thead><tr><th>Тип</th><th>Название/Мастер</th><th>Компания/Автор</th><th>Телефон</th><th>Рубрика</th></tr></thead><tbody>';
       newData.forEach(i => {
         const isReview = i.type === 'review';
         html += `<tr>
@@ -121,7 +377,7 @@
           <td>${(isReview ? '-' : i.rubric) || '-'}</td>
         </tr>`;
       });
-      html += '</table>';
+      html += '</tbody></table>';
       els.previewTable.innerHTML = html;
     }
 
@@ -131,7 +387,6 @@
       els.previewCard.style.display = 'none';
     }
 
-    // Публикация в GitHub
     async function publishToGitHub() {
       const owner = els.gh_owner.value.trim();
       const repo = els.gh_repo.value.trim();
@@ -145,18 +400,18 @@
       const headers = { Authorization: `token ${token}`, Accept: 'application/vnd.github.v3+json' };
 
       try {
-        let sha = null, currentData = [];
+        let sha = null;
         const getRes = await fetch(url, { headers });
         if(getRes.ok) {
           const file = await getRes.json();
           sha = file.sha;
           const binary = atob(file.content);
           const bytes = Uint8Array.from(binary, c => c.charCodeAt(0));
-          currentData = JSON.parse(new TextDecoder('utf-8').decode(bytes));
+          allContacts = JSON.parse(new TextDecoder('utf-8').decode(bytes));
         }
 
-        const existingIds = new Set(currentData.map(i => i.id));
-        let merged = [...currentData];
+        const existingIds = new Set(allContacts.map(i => i.id));
+        let merged = [...allContacts];
 
         newData.forEach(item => {
           if (item.type === 'review') {
@@ -173,24 +428,11 @@
           }
         });
 
-        const jsonString = JSON.stringify(merged, null, 2);
-        const encoder = new TextEncoder();
-        const utf8Bytes = encoder.encode(jsonString);
-        let binary = '';
-        utf8Bytes.forEach(b => binary += String.fromCharCode(b));
-        
-        const payload = {
-          message: `📝 Модерация: добавлено ${newData.length} записей (${new Date().toLocaleDateString('ru-RU')})`,
-          content: btoa(binary),
-          branch
-        };
-        if(sha) payload.sha = sha;
-
-        const putRes = await fetch(url, { method: 'PUT', headers, body: JSON.stringify(payload) });
-        if(!putRes.ok) throw new Error((await putRes.json()).message || 'Ошибка коммита');
-
+        await publishDataToGitHub(merged, `📝 Добавлено ${newData.length} записей`);
         showStatus('success', `✅ Успешно опубликовано ${newData.length} записей!`);
         clearData();
+        allContacts = merged;
+        displayContacts(allContacts);
       } catch(e) { 
         console.error(e);
         showStatus('error', '❌ Ошибка: ' + e.message); 
@@ -204,45 +446,8 @@
       setTimeout(() => els.status.style.display = 'none', 6000);
     }
 
-    // === АВТОЗАПОЛНЕНИЕ ИЗ URL ===
-    function checkUrlForData() {
-      const urlParams = new URLSearchParams(window.location.search);
-      let encodedData = urlParams.get('data');
-
-      if (encodedData) {
-        try {
-          // Убираем возможные пробелы/переносы строк, которые мог добавить почтовик
-          encodedData = encodedData.trim().replace(/\s+/g, '');
-          
-          // Безопасное декодирование Base64 -> UTF-8
-          const binaryString = window.atob(encodedData);
-          const bytes = new Uint8Array(binaryString.length);
-          for (let i = 0; i < binaryString.length; i++) bytes[i] = binaryString.charCodeAt(i);
-          
-          const jsonString = new TextDecoder('utf-8').decode(bytes);
-          const parsed = JSON.parse(jsonString);
-
-          els.rawData.value = JSON.stringify(parsed, null, 2);
-          newData = Array.isArray(parsed) ? parsed : [parsed];
-          
-          parseData(); // Запускает валидацию и отрисовку таблицы
-          showStatus('success', '✅ Данные загружены из ссылки! Проверьте и нажмите "Опубликовать"');
-          
-          // Очищаем URL от параметров для безопасности
-          window.history.replaceState({}, document.title, window.location.pathname);
-        } catch (e) {
-          console.error('Auto-fill error:', e);
-          showStatus('error', '❌ Ошибка декодирования. Скопируйте JSON из письма в поле ниже.');
-        }
-      }
-    }
-
-    // Запускаем после полной загрузки DOM
-    if (document.readyState === 'loading') {
-      document.addEventListener('DOMContentLoaded', checkUrlForData);
-    } else {
-      checkUrlForData();
-    }
+    // Инициализация
+    els.searchContact.addEventListener('keypress', e => { if(e.key === 'Enter') searchContacts(); });
   </script>
 </body>
 </html>
