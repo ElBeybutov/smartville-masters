@@ -90,11 +90,50 @@
     .btn-sec:hover { background: #e0d5c1; }
     .btn-add { position: fixed; bottom: 2rem; right: 2rem; background: var(--secondary); color: white; padding: 1rem 2rem; border-radius: 50px; box-shadow: var(--shadow-hover); font-weight: 700; cursor: pointer; z-index: 90; transition: 0.3s; border: none; display: flex; align-items: center; gap: 0.5rem; font-family: 'Montserrat', sans-serif; }
     .btn-add:hover { transform: scale(1.05); background: var(--accent); }
-    .sync-status { position: fixed; bottom: 2rem; left: 2rem; background: white; padding: 0.6rem 1rem; border-radius: 8px; box-shadow: var(--shadow-hover); font-size: 0.85rem; font-weight: 600; z-index: 90; transition: 0.3s; opacity: 0; pointer-events: none; }
-    .sync-status.show { opacity: 1; pointer-events: auto; }
-    .sync-status.loading { color: var(--secondary); }
-    .sync-status.success { color: var(--primary); }
-    .sync-status.error { color: #ef4444; }
+    
+.sync-status { 
+  position: fixed; 
+  top: 50%; 
+  left: 50%; 
+  transform: translate(-50%, -50%); 
+  background: white; 
+  padding: 1.2rem 2rem; 
+  border-radius: 12px; 
+  box-shadow: 0 10px 40px rgba(0,0,0,0.3); 
+  font-size: 1rem; 
+  font-weight: 600; 
+  z-index: 9999; /* Поверх всего */
+  transition: 0.3s; 
+  opacity: 0; 
+  pointer-events: none; 
+  min-width: 300px;
+  text-align: center;
+  border: 2px solid var(--border);
+}
+
+.sync-status.show { 
+  opacity: 1; 
+  pointer-events: auto; 
+  transform: translate(-50%, -50%) scale(1.05);
+}
+
+.sync-status.loading { 
+  color: var(--secondary); 
+  background: #fffbeb;
+  border-color: var(--secondary);
+}
+
+.sync-status.success { 
+  color: var(--primary); 
+  background: #f0fdf4;
+  border-color: var(--primary);
+}
+
+.sync-status.error { 
+  color: #dc2626; 
+  background: #fef2f2;
+  border-color: #dc2626;
+}
     
     footer { background: var(--primary); color: white; text-align: center; padding: 2rem 1rem; margin-top: 2rem; font-size: 0.9rem; }
     footer a { color: var(--accent); text-decoration: none; cursor: pointer; }
@@ -326,23 +365,51 @@
       }
       els.f_rubric.oninput = updateFormLists;
 
-      async function sendTelegramNotification(data, isReview) {
-        const typeText = isReview ? '📝 Новый отзыв' : '📞 Новая заявка (Контакт)';
-        const name = isReview ? `Отзыв на #${data.masterId}` : data.name;
-        const details = isReview ? `⭐ Рейтинг: ${data.review.rating}/5\n💬 Текст: ${data.review.text}` : `🏢 Компания: ${data.company || '-'}\n📞 Телефон: ${data.phone}\n📂 Рубрика: ${data.rubric}\n📌 Категория: ${data.category}\n📝 Описание: ${data.desc}`;
-        const jsonData = JSON.stringify(data, null, 2);
-        const base64Data = btoa(unescape(encodeURIComponent(jsonData)));
-        const approveUrl = `${TG_CONFIG.adminUrl}?data=${encodeURIComponent(base64Data)}`;
-        const text = `<b>${typeText} в SmartVille</b>\n\n👤 <b>Отправитель:</b> ${isReview ? data.review.author : data.author}\n🏷 <b>Объект:</b> ${name}\n\n${details}\n\n<b>👇 Нажмите кнопку ниже, чтобы добавить:</b>`;
+     async function sendTelegramNotification(data, isReview) {
+  const typeText = isReview ? '📝 Новый отзыв' : '📞 Новая заявка (Контакт)';
+  const name = isReview ? `Отзыв на #${data.masterId}` : data.name;
+  const details = isReview 
+    ? `⭐ Рейтинг: ${data.review.rating}/5\n💬 Текст: ${data.review.text}`
+    : `🏢 Компания: ${data.company || '-'}\n📞 Телефон: ${data.phone}\n📂 Рубрика: ${data.rubric}\n📌 Категория: ${data.category}\n📝 Описание: ${data.desc}`;
 
-        const apiUrl = `https://api.telegram.org/bot${TG_CONFIG.token}/sendMessage`;
-	console.log('Попытка отправить запрос на:', apiUrl);
+  const jsonData = JSON.stringify(data, null, 2);
+  const base64Data = btoa(unescape(encodeURIComponent(jsonData)));
+  const approveUrl = `${TG_CONFIG.adminUrl}?data=${encodeURIComponent(base64Data)}`;
 
-        try {
-          const res = await fetch(`https://api.telegram.org/bot${TG_CONFIG.token}/sendMessage`, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ chat_id: TG_CONFIG.chatId, text, parse_mode: 'HTML', reply_markup: { inline_keyboard: [[ { text: '✅ Добавить', url: approveUrl } ]] } }) });
-          return res.ok;
-        } catch (e) { return false; }
-      }
+  const text = `<b>${typeText} в SmartVille</b>\n\n👤 <b>Отправитель:</b> ${isReview ? data.review.author : data.author}\n🏷 <b>Объект:</b> ${name}\n\n${details}\n\n<b>👇 Нажмите кнопку ниже, чтобы добавить:</b>`;
+
+  const payload = {
+    chat_id: String(TG_CONFIG.chatId), // ← Обязательно строка!
+    text: text,
+    parse_mode: 'HTML',
+    reply_markup: { 
+      inline_keyboard: [[ 
+        { text: '✅ Добавить в каталог', url: approveUrl } 
+      ]] 
+    }
+  };
+
+  // 🔍 ОТЛАДКА: Выводим в консоль
+  console.log('📤 TG_CONFIG:', TG_CONFIG);
+  console.log('📤 Payload:', JSON.stringify(payload, null, 2));
+  console.log('📤 URL:', `https://api.telegram.org/bot${TG_CONFIG.token}/sendMessage`);
+
+  try {
+    const response = await fetch(`https://api.telegram.org/bot${TG_CONFIG.token}/sendMessage`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(payload)
+    });
+    
+    const result = await response.json();
+    console.log('📥 Ответ Telegram:', result);
+    
+    return response.ok;
+  } catch (e) { 
+    console.error('🚨 Telegram Error:', e); 
+    return false; 
+  }
+}
 
         els.addForm.onsubmit = async e => {
         e.preventDefault();
