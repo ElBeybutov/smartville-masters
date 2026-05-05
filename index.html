@@ -369,9 +369,9 @@
                 <div class="card-title">${item.name}</div>
                 <div class="card-company">${item.company||''}</div>
               </div>
-              <div style="text-align:right;">
+              <div style="display: flex; flex-direction: column; align-items: flex-end; gap: 4px;">
                 <span class="badge">${item.rubric}</span>
-                <span class="category-inline">• ${item.category}</span>
+                <span class="tag">📌 ${item.category}</span>
               </div>
             </div>
             <div class="rating-row"><span class="stars">${stars}</span><span class="rating-count">${avg>0?avg:'—'} (${count})</span></div>
