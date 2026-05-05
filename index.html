@@ -21,7 +21,7 @@
       content: ''; 
       position: absolute; 
       inset: 0; 
-      background-image: url("data:image/svg+xml,%3Csvg width='60' height='60' viewBox='0 0 60 60' xmlns='http://www.w3.org/2000/svg'%3E%3Cg fill='%23ffffff' fill-opacity='0.04'%3E%3Cpath d='M36 34v-4h-2v4h-4v2h4v4h2v-4h4v-2h-4zm0-30V0h-2v4h-4v2h4v4h2V6h4V4h-4zM6 34v-4H4v4H0v2h4v4h2v-4h4v-2H6zM6 4V0H4v4H0v2h4v4h2V6h4V4H6z'/%3E%3C/g%3E%3C/svg%3E");
+      background-image: url("image/svg+xml,%3Csvg width='60' height='60' viewBox='0 0 60 60' xmlns='http://www.w3.org/2000/svg'%3E%3Cg fill='%23ffffff' fill-opacity='0.04'%3E%3Cpath d='M36 34v-4h-2v4h-4v2h4v4h2v-4h4v-2h-4zm0-30V0h-2v4h-4v2h4v4h2V6h4V4h-4zM6 34v-4H4v4H0v2h4v4h2v-4h4v-2H6zM6 4V0H4v4H0v2h4v4h2V6h4V4H6z'/%3E%3C/g%3E%3C/svg%3E");
     }
     .hero h1 { font-size: 2.4rem; margin-bottom: 0.4rem; font-weight: 700; text-shadow: 1px 1px 3px rgba(0,0,0,0.15); }
     .hero p { font-size: 1.1rem; opacity: 0.9; }
@@ -53,16 +53,17 @@
     .card { background: var(--card); border-radius: var(--radius); padding: 1.4rem; box-shadow: var(--shadow); transition: 0.3s; border: 2px solid transparent; position: relative; overflow: hidden; }
     .card::before { content: ''; position: absolute; top: 0; left: 0; right: 0; height: 4px; background: linear-gradient(90deg, var(--primary), var(--secondary)); }
     .card:hover { transform: translateY(-4px); box-shadow: var(--shadow-hover); border-color: var(--border); }
-    .card-header { display: flex; justify-content: space-between; align-items: start; margin-bottom: 0.8rem; gap: 0.8rem; }
+    .card-header { display: flex; justify-content: space-between; align-items: start; margin-bottom: 0.5rem; gap: 0.8rem; }
     .card-title { font-size: 1.1rem; font-weight: 700; color: var(--primary); margin-bottom: 0.2rem; font-family: 'Montserrat', sans-serif; }
     .card-company { font-size: 0.9rem; color: var(--text-light); font-weight: 600; }
     .badge { background: linear-gradient(135deg, var(--secondary), var(--accent)); color: white; padding: 0.25rem 0.7rem; border-radius: 20px; font-size: 0.75rem; font-weight: 600; white-space: nowrap; }
+    .category-inline { color: var(--text-light); font-size: 0.85rem; font-weight: 500; margin-left: 0.5rem; }
     .tag { background: #f0e6d2; color: var(--primary); padding: 0.2rem 0.6rem; border-radius: 6px; font-size: 0.75rem; font-weight: 600; display: inline-block; margin-bottom: 0.6rem; }
     .phone-btn { display: inline-flex; align-items: center; gap: 0.5rem; background: var(--bg); padding: 0.5rem 0.9rem; border-radius: 8px; color: var(--primary); text-decoration: none; font-weight: 600; margin: 0.5rem 0; transition: 0.3s; border: 2px solid var(--border); }
     .phone-btn:hover { background: var(--primary); color: white; }
     .card-desc { color: var(--text-light); font-size: 0.9rem; line-height: 1.5; margin: 0.5rem 0; }
     .card-price { background: #e8f5e9; color: var(--primary); padding: 0.4rem 0.7rem; border-radius: 6px; font-size: 0.85rem; font-weight: 600; display: inline-block; margin-top: 0.5rem; }
-    .card-footer { display: flex; justify-content: space-between; align-items: center; margin-top: 1rem; padding-top: 0.8rem; border-top: 1px dashed var(--border); font-size: 0.8rem; color: var(--text-light); flex-wrap: wrap; gap: 0.5rem; }
+    .card-footer { display: flex; justify-content: flex-end; align-items: center; margin-top: 1rem; padding-top: 0.8rem; border-top: 1px dashed var(--border); font-size: 0.8rem; color: var(--text-light); flex-wrap: wrap; gap: 0.5rem; }
     .site-link { color: var(--primary); text-decoration: none; font-weight: 600; }
     .review-btn { background: none; border: none; color: var(--secondary); cursor: pointer; font-size: 0.8rem; padding: 0; font-weight: 600; transition: 0.2s; }
     .review-btn:hover { text-decoration: underline; }
@@ -250,11 +251,10 @@
     document.addEventListener('DOMContentLoaded', () => {
       
       // === TELEGRAM BOT CONFIG ===
-      // ВНИМАНИЕ: Вставьте сюда данные вашего бота и ID!
       const TG_CONFIG = {
-        token: 'ВАШ_ТОКЕН_БОТА', // Замените на токен от @BotFather
-        chatId: 'ВАШ_CHAT_ID', // Замените на ваш ID от @userinfobot
-        adminUrl: 'https://elbeybutov.github.io/smartville-masters/admin.html' // Ссылка на вашу админку
+        token: '8456078051:AAHnalIHLE7m96-U6wV_Wb5tNHWihVkO58c',
+        chatId: '165557958',
+        adminUrl: 'https://elbeybutov.github.io/smartville-masters/moderate.html'
       };
 
       const DEFAULT_RUBRICS = {
@@ -268,7 +268,7 @@
         "Животные": ["Груминг", "Ветклиники", "Обработка от клещей"]
       };
 
-      let catalogData = []; // Изначально пусто, загружается с GitHub
+      let catalogData = [];
       let RUBRICS_CONFIG = JSON.parse(localStorage.getItem('sv_rubrics_config')) || JSON.parse(JSON.stringify(DEFAULT_RUBRICS));
       let activeRubric = 'Все', activeCategory = 'Все', searchQuery = '';
 
@@ -329,7 +329,6 @@
       function renderGrid() {
         els.grid.innerHTML = '';
         
-        // Loading State
         if (catalogData.length === 0) {
           els.grid.innerHTML = `<div class="empty"><span>⏳</span><h3>Загрузка каталога...</h3><p>Пожалуйста, подождите.</p></div>`;
           return;
@@ -350,19 +349,35 @@
           const stars = avg > 0 ? '★'.repeat(Math.round(avg)) + '☆'.repeat(5-Math.round(avg)) : '☆☆☆☆☆';
           const card = document.createElement('div'); 
           card.className = 'card'; 
-          card.dataset.id = item.id; // ID для шаринга и подсветки
+          card.dataset.id = item.id;
           
           let phonesHtml = '';
-          if(item.phone) item.phone.split(',').map(p=>p.trim()).forEach(p=>{ phonesHtml += `<a href="tel:${p.replace(/\D/g,'')}" class="phone-btn">📞 ${p}</a> `; });
+          if(item.phone) {
+            item.phone.split(',').map(p=>p.trim()).forEach(p=>{ 
+              // ИСПРАВЛЕНИЕ 1: Правильный формат телефона для tel:
+              const cleanPhone = p.replace(/[^\d+]/g,'');
+              const telLink = cleanPhone.startsWith('+') ? cleanPhone : '+' + cleanPhone.replace(/^8/, '7');
+              phonesHtml += `<a href="tel:${telLink}" class="phone-btn">📞 ${p}</a> `; 
+            });
+          }
           const webHtml = item.web ? `<a href="${item.web}" target="_blank" class="site-link">🌐 Перейти</a>` : '';
           
+          // ИСПРАВЛЕНИЕ 2 и 3: Категория под рубрикой, без автора
           card.innerHTML = `
-            <div class="card-header"><div><div class="card-title">${item.name}</div><div class="card-company">${item.company||''}</div></div><span class="badge">${item.rubric}</span></div>
+            <div class="card-header">
+              <div>
+                <div class="card-title">${item.name}</div>
+                <div class="card-company">${item.company||''}</div>
+              </div>
+              <div style="text-align:right;">
+                <span class="badge">${item.rubric}</span>
+                <span class="category-inline">• ${item.category}</span>
+              </div>
+            </div>
             <div class="rating-row"><span class="stars">${stars}</span><span class="rating-count">${avg>0?avg:'—'} (${count})</span></div>
-            ${phonesHtml}<span class="tag">📌 ${item.category}</span>
+            ${phonesHtml}<span class="tag" style="display:none"></span>
             ${item.desc?`<div class="card-desc">${item.desc}</div>`:''}${item.price?`<div class="card-price">💰 ${item.price}</div>`:''}${webHtml?`<div style="margin-top:0.5rem">${webHtml}</div>`:''}
             <div class="card-footer">
-              <span>👤 ${item.author||'Житель'}</span>
               <div style="display:flex; gap:0.8rem; align-items:center;">
                 <button class="share-btn" onclick="shareContact(${item.id})">🔗 Поделиться</button>
                 <button class="reviews-list-btn" data-id="${item.id}">📖 Отзывы (${count})</button>
@@ -433,10 +448,9 @@
       els.addForm.onsubmit = async e => {
         e.preventDefault();
         
-        // Проверка токенов перед отправкой
         if (TG_CONFIG.token === 'ВАШ_ТОКЕН_БОТА' || TG_CONFIG.chatId === 'ВАШ_CHAT_ID') {
-          alert('⚠️ Ошибка настройки:\nВставьте реальные TOKEN и CHAT_ID в начало скрипта (строка ~290).');
-          console.error('❌ TG_CONFIG не настроен. Заполните token и chatId.');
+          alert('⚠️ Ошибка настройки:\nВставьте реальные TOKEN и CHAT_ID в начало скрипта.');
+          console.error('❌ TG_CONFIG не настроен.');
           return;
         }
 
@@ -465,11 +479,10 @@
             els.addForm.reset();
           } else {
             showSync('error', '❌ Не удалось отправить. Проверьте консоль (F12).');
-            console.error('❌ Telegram API вернул ошибку.');
           }
         } catch (err) {
-          console.error('🚨 Критическая ошибка отправки:', err);
-          showSync('error', '❌ Ошибка сети или скрипта.');
+          console.error('🚨 Критическая ошибка:', err);
+          showSync('error', '❌ Ошибка сети.');
         }
       };
 
@@ -498,7 +511,7 @@
 
       function openReviewsList(id) {
         const item = catalogData.find(i => i.id === id);
-        if (!item || !item.reviews?.length) { alert('📭 Отзывов пока нет. Будьте первым!'); return; }
+        if (!item || !item.reviews?.length) { alert('📭 Отзывов пока нет.'); return; }
         let html = `<h3 style="margin-bottom:1rem; color:var(--primary);">Отзывы о "${item.name}"</h3>`;
         item.reviews.forEach(r => { const stars = '★'.repeat(r.rating) + '☆'.repeat(5 - r.rating); html += `<div class="review-item"><div class="review-header"><span class="review-author">👤 ${r.author}</span><span class="review-date">📅 ${r.date}</span></div><div class="review-stars">${stars}</div><div class="review-text">${r.text}</div></div>`; });
         const tempModal = document.createElement('div'); tempModal.className = 'modal-overlay open';
@@ -528,7 +541,7 @@
         }
       };
 
-      // === AUTO-SCROLL & HIGHLIGHT ON LOAD ===
+      // === AUTO-SCROLL & HIGHLIGHT ===
       function checkUrlParams() {
         const urlParams = new URLSearchParams(window.location.search);
         const contactId = urlParams.get('id');
@@ -549,7 +562,6 @@
       els.searchInput.oninput = () => { searchQuery=els.searchInput.value.toLowerCase(); renderGrid(); };
       els.searchInput.onkeydown = e => { if(e.key==='Enter') { searchQuery=els.searchInput.value.toLowerCase(); renderGrid(); }};
 
-      // === MAIN DATA LOADER ===
       async function loadData() {
         try {
           const res = await fetch('data.json', { cache: 'no-store' });
@@ -557,7 +569,6 @@
             const remoteData = await res.json();
             if (Array.isArray(remoteData) && remoteData.length > 0) {
               catalogData = remoteData;
-              // Авто-обновление рубрик из данных
               const uniqueRubrics = [...new Set(catalogData.map(item => item.rubric))];
               let configUpdated = false;
               uniqueRubrics.forEach(rubric => {
@@ -572,7 +583,7 @@
           }
         } catch (e) { console.error('Ошибка загрузки data.json:', e); }
         renderAll();
-        checkUrlParams(); // Check ID parameter after rendering
+        checkUrlParams();
       }
 
       loadData();
