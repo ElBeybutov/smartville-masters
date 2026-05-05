@@ -173,6 +173,10 @@
       const EMAILJS_PUBLIC_KEY = 'KEbATvnm4syggRqnc'; // из Account -> API Keys
       const EMAILJS_SERVICE_ID = 'service_9oqpk1l'; // из Email Services
       const EMAILJS_TEMPLATE_ID = 'template_ca8bipe'; // из Email Templates
+      
+      // === ADMIN PANEL URL (ЗАМЕНИТЕ НА ВАШ URL) ===
+      const ADMIN_PANEL_URL = 'https://elbeybutov.github.io/smartville-masters/moderate.html';
+      
       emailjs.init(EMAILJS_PUBLIC_KEY);
 
       const DEFAULT_RUBRICS = {
@@ -355,6 +359,11 @@
           reviews: []
         };
         
+        // Создаём base64_encoded ссылку для быстрого добавления
+        const jsonData = JSON.stringify(newItem, null, 2);
+        const base64Data = btoa(unescape(encodeURIComponent(jsonData)));
+        const quickAddUrl = `${ADMIN_PANEL_URL}?data=${encodeURIComponent(base64Data)}`;
+        
         showSync('loading', '⏳ Отправка заявки...');
         try {
           await emailjs.send(EMAILJS_SERVICE_ID, EMAILJS_TEMPLATE_ID, {
@@ -368,7 +377,10 @@
             contact_price: newItem.price,
             contact_web: newItem.web,
             author_name: newItem.author,
-            contact_json: JSON.stringify(newItem, null, 2)
+            contact_json: jsonData,
+            contact_json_base64: base64Data,
+            admin_quick_link: quickAddUrl,
+            type: 'Новый контакт'
           });
           showSync('success', '✅ Заявка отправлена! Контакт появится после проверки.');
           closeModal(els.addModal); els.addForm.reset();
@@ -406,11 +418,17 @@
         closeModal(els.reviewModal);
         els.reviewForm.reset();
 
+        // Создаём base64_encoded ссылку для быстрого добавления отзыва
+        const reviewData = { type: 'review', masterId: id, review: newReview };
+        const jsonData = JSON.stringify(reviewData, null, 2);
+        const base64Data = btoa(unescape(encodeURIComponent(jsonData)));
+        const quickAddUrl = `${ADMIN_PANEL_URL}?data=${encodeURIComponent(base64Data)}`;
+
         showSync('loading', '⏳ Отправка отзыва на модерацию...');
         try {
           await emailjs.send(EMAILJS_SERVICE_ID, EMAILJS_TEMPLATE_ID, {
             from_name: newReview.author,
-            contact_name: 'Отзыв на ' + item.name,
+            contact_name: `Отзыв на ${item.name}`,
             contact_company: item.company || '',
             contact_phone: item.phone || '',
             contact_rubric: item.rubric,
@@ -419,7 +437,10 @@
             contact_price: '',
             contact_web: '',
             author_name: newReview.author,
-            contact_json: JSON.stringify({ type: 'review', masterId: id, review: newReview }, null, 2)
+            contact_json: jsonData,
+            contact_json_base64: base64Data,
+            admin_quick_link: quickAddUrl,
+            type: 'Новый отзыв'
           });
           showSync('success', '✅ Отзыв отправлен! Появится после проверки.');
         } catch(err) {
