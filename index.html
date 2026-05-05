@@ -525,21 +525,34 @@
         const item = catalogData.find(i => i.id === id);
         const name = item ? item.name : 'Контакт';
 
-        if (navigator.share) {
+        // Проверяем, мобильное ли устройство
+        const isMobile = /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent) || 
+                        (navigator.maxTouchPoints && navigator.maxTouchPoints > 2);
+        
+        // На мобильных используем Web Share API
+        if (isMobile && navigator.share && window.isSecureContext) {
           navigator.share({
             title: `Контакт: ${name}`,
             text: `Посмотри этого специалиста в каталоге SmartVille:`,
             url: contactUrl
-          }).catch(console.error);
-        } else {
-          navigator.clipboard.writeText(contactUrl).then(() => {
-            showSync('success', '🔗 Ссылка скопирована!');
           }).catch(err => {
-            console.error('Ошибка копирования', err);
-            prompt('Скопируйте ссылку вручную:', contactUrl);
+            console.error('Web Share error:', err);
+            copyToClipboard(contactUrl, name);
           });
+        } else {
+          // На десктопе просто копируем ссылку
+          copyToClipboard(contactUrl, name);
         }
       };
+
+function copyToClipboard(url, name) {
+  navigator.clipboard.writeText(url).then(() => {
+    showSync('success', `🔗 Ссылка на "${name}" скопирована!`);
+  }).catch(err => {
+    console.error('Failed to copy:', err);
+    prompt('Скопируйте ссылку вручную:', url);
+  });
+}
 
       // === AUTO-SCROLL & HIGHLIGHT ===
       function checkUrlParams() {
