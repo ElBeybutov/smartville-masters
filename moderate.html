@@ -248,11 +248,6 @@
     async function saveEdit() {
       if(!editingId) return;
       
-      const owner = els.gh_owner.value.trim();
-      const repo = els.gh_repo.value.trim();
-      const branch = els.gh_branch.value.trim();
-      const token = els.gh_token.value.trim();
-
       const updatedContact = {
         id: parseInt(document.getElementById('edit_contact_id').value),
         rubric: document.getElementById('edit_rubric').value.trim(),
@@ -268,12 +263,9 @@
       };
 
       const index = allContacts.findIndex(c => c.id === editingId);
-      if(index !== -1) {
-        allContacts[index] = updatedContact;
-      }
+      if(index !== -1) allContacts[index] = updatedContact;
 
       showStatus('loading', '⏳ Сохранение изменений...');
-      
       try {
         await publishDataToGitHub(allContacts, `✏️ Обновлено: ${updatedContact.name}`);
         showStatus('success', '✅ Изменения сохранены');
@@ -293,13 +285,7 @@
     async function deleteContact(id) {
       if(!confirm(`⚠️ Вы уверены, что хотите удалить контакт #${id}?`)) return;
       
-      const owner = els.gh_owner.value.trim();
-      const repo = els.gh_repo.value.trim();
-      const branch = els.gh_branch.value.trim();
-      const token = els.gh_token.value.trim();
-
       allContacts = allContacts.filter(c => c.id !== id);
-      
       showStatus('loading', '⏳ Удаление...');
       
       try {
@@ -308,16 +294,13 @@
         displayContacts(allContacts);
       } catch(e) {
         showStatus('error', '❌ Ошибка удаления: ' + e.message);
-        // Откат изменения при ошибке
         location.reload();
       }
     }
 
     function copyLink(id) {
       const url = `${window.location.origin}/smartville-masters/?id=${id}`;
-      navigator.clipboard.writeText(url).then(() => {
-        showStatus('success', `🔗 Ссылка скопирована: ${url}`);
-      });
+      navigator.clipboard.writeText(url).then(() => showStatus('success', `🔗 Ссылка скопирована`));
     }
 
     async function publishDataToGitHub(data, commitMessage) {
@@ -329,13 +312,9 @@
       const url = `https://api.github.com/repos/${owner}/${repo}/contents/data.json?ref=${branch}`;
       const headers = { Authorization: `token ${token}`, Accept: 'application/vnd.github.v3+json' };
 
-      // Получаем текущий SHA
       const getRes = await fetch(url, { headers });
       let sha = null;
-      if(getRes.ok) {
-        const file = await getRes.json();
-        sha = file.sha;
-      }
+      if(getRes.ok) { sha = (await getRes.json()).sha; }
 
       const jsonString = JSON.stringify(data, null, 2);
       const encoder = new TextEncoder();
@@ -343,11 +322,7 @@
       let binary = '';
       utf8Bytes.forEach(b => binary += String.fromCharCode(b));
       
-      const payload = {
-        message: commitMessage || '📝 Обновление данных',
-        content: btoa(binary),
-        branch: branch
-      };
+      const payload = { message: commitMessage || '📝 Обновление', content: btoa(binary), branch };
       if(sha) payload.sha = sha;
 
       const putRes = await fetch(url, { method: 'PUT', headers, body: JSON.stringify(payload) });
@@ -446,7 +421,40 @@
       setTimeout(() => els.status.style.display = 'none', 6000);
     }
 
-    // Инициализация
+    // === АВТОЗАПОЛНЕНИЕ ИЗ TELEGRAM ССЫЛКИ ===
+    function autoFillFromUrl() {
+      const urlParams = new URLSearchParams(window.location.search);
+      const encoded = urlParams.get('data');
+      if (!encoded) return;
+
+      try {
+        // Удаляем возможные пробелы/переносы от почтовиков
+        const clean = encoded.replace(/\s+/g, '');
+        // Декодируем Base64 -> UTF-8
+        const binary = atob(clean);
+        const bytes = new Uint8Array(binary.length);
+        for (let i = 0; i < binary.length; i++) bytes[i] = binary.charCodeAt(i);
+        const jsonStr = new TextDecoder('utf-8').decode(bytes);
+        const parsed = JSON.parse(jsonStr);
+
+        els.rawData.value = JSON.stringify(parsed, null, 2);
+        newData = Array.isArray(parsed) ? parsed : [parsed];
+        parseData();
+        showStatus('success', '✅ Данные загружены из Telegram! Нажмите "🚀 Опубликовать"');
+        window.history.replaceState({}, document.title, window.location.pathname);
+      } catch (e) {
+        console.error('Auto-fill error:', e);
+        showStatus('error', '❌ Ошибка декодирования. Вставьте JSON вручную.');
+      }
+    }
+
+    // Запуск после полной загрузки DOM
+    if (document.readyState === 'loading') {
+      document.addEventListener('DOMContentLoaded', autoFillFromUrl);
+    } else {
+      autoFillFromUrl();
+    }
+
     els.searchContact.addEventListener('keypress', e => { if(e.key === 'Enter') searchContacts(); });
   </script>
 </body>
