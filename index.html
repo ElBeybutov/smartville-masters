@@ -334,7 +334,10 @@
         const base64Data = btoa(unescape(encodeURIComponent(jsonData)));
         const approveUrl = `${TG_CONFIG.adminUrl}?data=${encodeURIComponent(base64Data)}`;
         const text = `<b>${typeText} в SmartVille</b>\n\n👤 <b>Отправитель:</b> ${isReview ? data.review.author : data.author}\n🏷 <b>Объект:</b> ${name}\n\n${details}\n\n<b>👇 Нажмите кнопку ниже, чтобы добавить:</b>`;
-        
+
+        const apiUrl = `https://api.telegram.org/bot${TG_CONFIG.token}/sendMessage`;
+	console.log('Попытка отправить запрос на:', apiUrl);
+
         try {
           const res = await fetch(`https://api.telegram.org/bot${TG_CONFIG.token}/sendMessage`, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ chat_id: TG_CONFIG.chatId, text, parse_mode: 'HTML', reply_markup: { inline_keyboard: [[ { text: '✅ Добавить', url: approveUrl } ]] } }) });
           return res.ok;
